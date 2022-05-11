@@ -16,6 +16,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       - name: Execute Gradle build
         run: ./gradlew build
 
@@ -34,6 +37,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
       - name: Execute Gradle test
         run: ./gradlew test
@@ -67,6 +73,9 @@ jobs:
           echo ossrh.password="$MAVEN_PASSWD" >> local.properties
           echo signing.key="$SIGNING_KEY" >> local.properties
           echo signing.password="$SIGNING_PASSWD" >> local.properties
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
       - name: Publish to snapshot repository
         if: github.ref == 'refs/heads/master'
