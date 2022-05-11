@@ -12,4 +12,12 @@ public class KatoCommonException extends KatoException {
     public KatoCommonException(String message, String defaultMessage) {
         super(message == null ? defaultMessage : message);
     }
+
+    public KatoCommonException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public KatoCommonException(Throwable cause) {
+        super(cause);
+    }
 }

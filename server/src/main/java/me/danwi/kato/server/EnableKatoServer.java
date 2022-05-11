@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Import(KatoResponseBodyAdvice.class)
+@Import({KatoConfig.class, KatoConfigWithSecurity.class})
 public @interface EnableKatoServer {
 }
 

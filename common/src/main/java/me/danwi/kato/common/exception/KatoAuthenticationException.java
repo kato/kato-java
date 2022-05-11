@@ -5,6 +5,18 @@ package me.danwi.kato.common.exception;
  */
 public class KatoAuthenticationException extends KatoCommonException {
     public KatoAuthenticationException() {
-        super("认证错误");
+        this("认证错误");
+    }
+
+    public KatoAuthenticationException(String message) {
+        super(message);
+    }
+
+    public KatoAuthenticationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public KatoAuthenticationException(Throwable cause) {
+        super(cause);
     }
 }

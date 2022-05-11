@@ -5,6 +5,19 @@ package me.danwi.kato.common.exception;
  */
 public class KatoAccessDeniedException extends KatoCommonException {
     public KatoAccessDeniedException() {
-        super("权限不足");
+        this("权限不足");
     }
+
+    public KatoAccessDeniedException(String message) {
+        super(message);
+    }
+
+    public KatoAccessDeniedException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public KatoAccessDeniedException(Throwable cause) {
+        super(cause);
+    }
+
 }
