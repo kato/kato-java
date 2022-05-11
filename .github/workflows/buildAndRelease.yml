@@ -44,7 +44,7 @@ jobs:
       - name: Execute Gradle test
         run: ./gradlew test
 
-  maven-publish:
+  publish:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
 
     needs:
