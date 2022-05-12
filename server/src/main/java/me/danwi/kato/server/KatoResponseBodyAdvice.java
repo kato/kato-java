@@ -2,12 +2,13 @@ package me.danwi.kato.server;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.danwi.kato.common.Result;
+import me.danwi.kato.common.ExceptionResult;
 import me.danwi.kato.common.exception.ExceptionExtraDataHolder;
 import me.danwi.kato.common.exception.KatoException;
 import me.danwi.kato.common.exception.KatoUndeclaredException;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
@@ -17,10 +18,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import java.lang.reflect.Method;
-import java.util.Map;
 
 @RestControllerAdvice
 public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
+    private final ObjectMapper mapper = new ObjectMapper();
+
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
         Method method = returnType.getMethod();
@@ -31,20 +33,19 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
-        //已经是Result
-        if (body instanceof Result) return body;
-
         //如果是一个异常
         if (body instanceof KatoException) {
-            Result<Map<String, Object>> exceptionResult = new Result<>();
+            ExceptionResult exceptionResult = new ExceptionResult();
             //设置异常定位ID
-            exceptionResult.setException(body.getClass().getName());
+            exceptionResult.setId(body.getClass().getName());
             //message填充
             exceptionResult.setMessage(((KatoException) body).getMessage());
             //如果有附加数据,则需要填充附加数据
             if (body instanceof ExceptionExtraDataHolder) {
                 exceptionResult.setData(((ExceptionExtraDataHolder) body).toMap());
             }
+            //设置异常状态码
+            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
             return exceptionResult;
         }
 
@@ -52,14 +53,14 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
         if (body instanceof String) {
             try {
                 response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-                return new ObjectMapper().writeValueAsString(new Result<>((String) body));
+                return mapper.writeValueAsString(body);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("json序列化失败", e);
             }
         }
 
-        //通用结果
-        return new Result<>(body);
+        //正常情况不做处理
+        return body;
     }
 
     @ExceptionHandler(KatoException.class)
