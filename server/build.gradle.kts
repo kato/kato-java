@@ -1,14 +1,13 @@
 plugins {
-    id("java")
-    kotlin("jvm")
-    id("maven-publish")
-    id("signing")
+    java
+    `java-library`
+    `maven-publish`
+    signing
 }
 
 dependencies {
     api(project(":common"))
 
-    compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     compileOnly("org.springframework:spring-context:5.3.19")
     compileOnly("org.springframework:spring-webmvc:5.3.19")
     compileOnly("org.springframework.security:spring-security-core:5.6.3")
