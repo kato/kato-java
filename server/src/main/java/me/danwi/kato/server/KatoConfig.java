@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 })
 public class KatoConfig {
     @Bean("me.danwi.kato.ResponseBodyAdvice")
-    KatoResponseBodyAdvice exceptionHandler() {
+    KatoResponseBodyAdvice responseBodyAdvice() {
         return new KatoResponseBodyAdvice();
     }
 }

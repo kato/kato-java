@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 })
 public class KatoConfigWithSecurity {
     @Bean("me.danwi.kato.ResponseBodyAdviceWithSecurity")
-    KatoResponseBodyAdviceWithSecurity exceptionHandler() {
+    KatoResponseBodyAdviceWithSecurity responseBodyAdvice() {
         return new KatoResponseBodyAdviceWithSecurity();
     }
 }
