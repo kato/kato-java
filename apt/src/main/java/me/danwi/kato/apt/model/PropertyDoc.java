@@ -3,7 +3,7 @@ package me.danwi.kato.apt.model;
 import lombok.Data;
 
 @Data
-public class GetterDoc {
+public class PropertyDoc {
     /**
      * Getter方法名
      */
@@ -12,4 +12,9 @@ public class GetterDoc {
      * 描述
      */
     private String description;
+
+    public PropertyDoc(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
 }

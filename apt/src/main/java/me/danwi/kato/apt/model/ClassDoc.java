@@ -1,6 +1,11 @@
 package me.danwi.kato.apt.model;
 
+import com.github.chhorz.javadoc.JavaDoc;
+import com.github.chhorz.javadoc.JavaDocParser;
+import com.github.chhorz.javadoc.JavaDocParserBuilder;
+import com.github.chhorz.javadoc.OutputType;
 import lombok.Data;
+import me.danwi.kato.apt.PropertyTag;
 
 @Data
 public class ClassDoc {
@@ -15,5 +20,17 @@ public class ClassDoc {
     /**
      * Getter方法文档
      */
-    private GetterDoc[] getterDocs;
+    private PropertyDoc[] propertyDocs;
+
+    public ClassDoc(String doc) {
+        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags()
+                .withCustomTag(new PropertyTag())
+                .withOutputType(OutputType.PLAIN).build();
+        JavaDoc javaDoc = javaDocParser.parse(doc);
+        description = javaDoc.getDescription();
+        //兼容Kotlin
+        propertyDocs = javaDoc.getTags(PropertyTag.class).stream()
+                .map(it -> new PropertyDoc(it.getPropertyName(), it.getDescription()))
+                .toArray(PropertyDoc[]::new);
+    }
 }

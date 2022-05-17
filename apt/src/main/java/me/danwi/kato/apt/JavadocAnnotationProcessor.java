@@ -5,17 +5,19 @@ import com.github.chhorz.javadoc.JavaDoc;
 import com.github.chhorz.javadoc.JavaDocParser;
 import com.github.chhorz.javadoc.JavaDocParserBuilder;
 import com.github.chhorz.javadoc.OutputType;
-import com.github.chhorz.javadoc.tags.ParamTag;
-import com.github.chhorz.javadoc.tags.ReturnTag;
-import com.github.chhorz.javadoc.tags.ThrowsTag;
-import me.danwi.kato.apt.model.*;
+import me.danwi.kato.apt.model.ClassDoc;
+import me.danwi.kato.apt.model.MethodDoc;
+import me.danwi.kato.apt.model.PropertyDoc;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
@@ -23,7 +25,6 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.Writer;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 public class JavadocAnnotationProcessor extends AbstractProcessor {
@@ -85,80 +86,41 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
 
 
     private ClassDoc generateClassDoc(TypeElement classElement) {
-        //解析java doc
-        String javadocStr = elementsUtil.getDocComment(classElement);
-        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags().withOutputType(OutputType.PLAIN).build();
-        JavaDoc javaDoc = javaDocParser.parse(javadocStr);
         //构造ClassDoc
-        ClassDoc classDoc = new ClassDoc();
-        //描述
-        classDoc.setDescription(javaDoc.getDescription());
+        ClassDoc classDoc = new ClassDoc(elementsUtil.getDocComment(classElement));
         //方法
         MethodDoc[] methodDocs = classElement.getEnclosedElements().stream()
                 .filter(it -> it instanceof ExecutableElement)
                 .filter(it -> it.getKind() == ElementKind.METHOD)
-                .filter(it -> !util.isGetter(it))
+                .filter(it -> ProcessorUtil.isGetter(it) == null)
                 .map(it -> generateMethodDoc((ExecutableElement) it))
                 .toArray(MethodDoc[]::new);
         classDoc.setMethodDocs(methodDocs);
-        //字段Getter TODO: 规范化处理,并添加lombok的支持
-        GetterDoc[] getterDocs = classElement.getEnclosedElements().stream()
-                .filter(it -> util.isGetter(it))
-                .map(it -> generateGetterDoc((ExecutableElement) it))
-                .toArray(GetterDoc[]::new);
-        classDoc.setGetterDocs(getterDocs);
+        //字段Getter TODO: 添加lombok的支持
+        PropertyDoc[] propertyDocs = classElement.getEnclosedElements().stream()
+                .filter(it -> ProcessorUtil.isGetter(it) != null)
+                .map(it -> generatePropertyDoc((ExecutableElement) it))
+                .toArray(PropertyDoc[]::new);
+        classDoc.setPropertyDocs(propertyDocs);
         return classDoc;
     }
 
     private MethodDoc generateMethodDoc(ExecutableElement methodElement) {
-        //解析java doc
-        String javadocStr = elementsUtil.getDocComment(methodElement);
-        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags().withOutputType(OutputType.PLAIN).build();
-        JavaDoc javaDoc = javaDocParser.parse(javadocStr);
-        //构造MethodDoc
-        MethodDoc methodDoc = new MethodDoc();
-        //名称
+        MethodDoc methodDoc = new MethodDoc(elementsUtil.getDocComment(methodElement));
         methodDoc.setName(methodElement.getSimpleName().toString());
-        //描述
-        methodDoc.setDescription(javaDoc.getDescription());
-        //参数
-        ParamDoc[] paramDocs = javaDoc.getTags(ParamTag.class).stream()
-                .map(it -> {
-                    ParamDoc paramDoc = new ParamDoc();
-                    paramDoc.setName(it.getParamName());
-                    paramDoc.setDescription(it.getParamDescription());
-                    return paramDoc;
-                })
-                .toArray(ParamDoc[]::new);
-        methodDoc.setParamDocs(paramDocs);
-        //返回值
-        List<ReturnTag> returnTags = javaDoc.getTags(ReturnTag.class);
-        if (!returnTags.isEmpty()) {
-            methodDoc.setReturnDoc(returnTags.get(0).getDescription());
-        }
-        //异常
-        ThrowDoc[] throwDocs = javaDoc.getTags(ThrowsTag.class).stream()
-                .map(it -> {
-                    ThrowDoc throwDoc = new ThrowDoc();
-                    throwDoc.setClassName(it.getClassName());
-                    throwDoc.setDescription(it.getDescription());
-                    return throwDoc;
-                })
-                .toArray(ThrowDoc[]::new);
-        methodDoc.setThrowDocs(throwDocs);
         return methodDoc;
     }
 
-    private GetterDoc generateGetterDoc(ExecutableElement element) {
+    private PropertyDoc generatePropertyDoc(ExecutableElement element) {
         //解析java doc
         String javadocStr = elementsUtil.getDocComment(element);
         JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags().withOutputType(OutputType.PLAIN).build();
         JavaDoc javaDoc = javaDocParser.parse(javadocStr);
         //构造PropertyDoc
-        GetterDoc getterDoc = new GetterDoc();
-        getterDoc.setName(element.getSimpleName().toString());
-        getterDoc.setDescription(javaDoc.getDescription());
-        return getterDoc;
+        return new PropertyDoc(
+                ProcessorUtil.getterNameToPropertyName(element.getSimpleName().toString()),
+                javaDoc.getDescription()
+        );
     }
 
     @Override
