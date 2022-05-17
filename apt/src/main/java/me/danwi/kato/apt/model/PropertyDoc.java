@@ -1,8 +1,10 @@
 package me.danwi.kato.apt.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class PropertyDoc {
     /**
      * Getter方法名

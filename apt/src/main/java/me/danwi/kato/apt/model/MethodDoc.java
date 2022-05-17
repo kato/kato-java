@@ -9,11 +9,13 @@ import com.github.chhorz.javadoc.tags.ParamTag;
 import com.github.chhorz.javadoc.tags.ReturnTag;
 import com.github.chhorz.javadoc.tags.ThrowsTag;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
+@NoArgsConstructor
 public class MethodDoc {
     /**
      * 方法名

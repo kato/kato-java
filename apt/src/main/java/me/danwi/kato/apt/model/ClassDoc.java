@@ -5,9 +5,11 @@ import com.github.chhorz.javadoc.JavaDocParser;
 import com.github.chhorz.javadoc.JavaDocParserBuilder;
 import com.github.chhorz.javadoc.OutputType;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import me.danwi.kato.apt.PropertyTag;
 
 @Data
+@NoArgsConstructor
 public class ClassDoc {
     /**
      * 描述
