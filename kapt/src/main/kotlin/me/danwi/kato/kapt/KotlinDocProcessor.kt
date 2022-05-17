@@ -57,7 +57,7 @@ class KotlinDocProcessor(private val codeGenerator: CodeGenerator) : SymbolProce
         //构造ClassDoc
         val classDoc = ClassDoc(classDeclaration.docString)
         //方法
-        classDoc.methodDocs = classDeclaration.getDeclaredFunctions()
+        classDoc.methods = classDeclaration.getDeclaredFunctions()
             .filter { it.isPublic() && !it.isConstructor() && !it.isInternal() && !it.isAbstract }
             .filter { ProcessorUtil.getterNameToPropertyName(it.simpleName.asString()) == null }
             .map { generateMethodDoc(it) }
@@ -71,8 +71,8 @@ class KotlinDocProcessor(private val codeGenerator: CodeGenerator) : SymbolProce
         val properties = classDeclaration.getDeclaredProperties()
             .filter { it.isPublic() && !it.isInternal() }
             .map { generatePropertyDoc(it) }
-        classDoc.propertyDocs =
-            (classDoc.propertyDocs.asSequence() + getterFunctions + properties).toList().toTypedArray()
+        classDoc.properties =
+            (classDoc.properties.asSequence() + getterFunctions + properties).toList().toTypedArray()
         return classDoc
     }
 

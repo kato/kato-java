@@ -95,13 +95,13 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
                 .filter(it -> ProcessorUtil.isGetter(it) == null)
                 .map(it -> generateMethodDoc((ExecutableElement) it))
                 .toArray(MethodDoc[]::new);
-        classDoc.setMethodDocs(methodDocs);
+        classDoc.setMethods(methodDocs);
         //字段Getter TODO: 添加lombok的支持
         PropertyDoc[] propertyDocs = classElement.getEnclosedElements().stream()
                 .filter(it -> ProcessorUtil.isGetter(it) != null)
                 .map(it -> generatePropertyDoc((ExecutableElement) it))
                 .toArray(PropertyDoc[]::new);
-        classDoc.setPropertyDocs(propertyDocs);
+        classDoc.setProperties(propertyDocs);
         return classDoc;
     }
 

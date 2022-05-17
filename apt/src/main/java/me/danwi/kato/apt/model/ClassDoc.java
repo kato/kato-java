@@ -16,11 +16,11 @@ public class ClassDoc {
     /**
      * 方法文档
      */
-    private MethodDoc[] methodDocs;
+    private MethodDoc[] methods;
     /**
      * Getter方法文档
      */
-    private PropertyDoc[] propertyDocs;
+    private PropertyDoc[] properties;
 
     public ClassDoc(String doc) {
         JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags()
@@ -29,7 +29,7 @@ public class ClassDoc {
         JavaDoc javaDoc = javaDocParser.parse(doc);
         description = javaDoc.getDescription();
         //兼容Kotlin
-        propertyDocs = javaDoc.getTags(PropertyTag.class).stream()
+        properties = javaDoc.getTags(PropertyTag.class).stream()
                 .map(it -> new PropertyDoc(it.getPropertyName(), it.getDescription()))
                 .toArray(PropertyDoc[]::new);
     }
