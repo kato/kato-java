@@ -3,6 +3,7 @@ package me.danwi.kato.example
 import me.danwi.kato.common.exception.ExceptionExtraDataHolder
 import me.danwi.kato.common.exception.KatoCommonException
 import me.danwi.kato.common.exception.KatoException
+import me.danwi.kato.dev.EnableKatoDev
 import me.danwi.kato.server.EnableKatoServer
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @SpringBootApplication
 @EnableKatoServer
+@EnableKatoDev
 class ExampleApplication
 
 fun main(args: Array<String>) {

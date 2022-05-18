@@ -13,6 +13,8 @@ configurations {
 
 dependencies {
     implementation(project(":server"))
+    implementation(project(":dev-tools"))
+
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
