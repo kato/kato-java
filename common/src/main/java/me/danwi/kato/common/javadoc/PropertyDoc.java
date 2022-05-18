@@ -1,4 +1,4 @@
-package me.danwi.kato.apt.model;
+package me.danwi.kato.common.javadoc;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

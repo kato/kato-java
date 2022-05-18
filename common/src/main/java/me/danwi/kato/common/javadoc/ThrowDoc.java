@@ -1,15 +1,15 @@
-package me.danwi.kato.apt.model;
+package me.danwi.kato.common.javadoc;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ParamDoc {
+public class ThrowDoc {
     /**
-     * 参数名
+     * 异常类名
      */
-    private String name;
+    private String className;
     /**
      * 描述
      */

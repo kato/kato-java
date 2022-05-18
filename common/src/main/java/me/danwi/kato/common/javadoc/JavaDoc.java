@@ -1,7 +1,6 @@
-package me.danwi.kato.apt;
+package me.danwi.kato.common.javadoc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.danwi.kato.apt.model.ClassDoc;
 
 import java.io.InputStream;
 

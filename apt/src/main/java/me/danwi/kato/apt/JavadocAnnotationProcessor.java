@@ -5,9 +5,9 @@ import com.github.chhorz.javadoc.JavaDoc;
 import com.github.chhorz.javadoc.JavaDocParser;
 import com.github.chhorz.javadoc.JavaDocParserBuilder;
 import com.github.chhorz.javadoc.OutputType;
-import me.danwi.kato.apt.model.ClassDoc;
-import me.danwi.kato.apt.model.MethodDoc;
-import me.danwi.kato.apt.model.PropertyDoc;
+import me.danwi.kato.common.javadoc.ClassDoc;
+import me.danwi.kato.common.javadoc.MethodDoc;
+import me.danwi.kato.common.javadoc.PropertyDoc;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
@@ -87,7 +87,7 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
 
     private ClassDoc generateClassDoc(TypeElement classElement) {
         //构造ClassDoc
-        ClassDoc classDoc = new ClassDoc(elementsUtil.getDocComment(classElement));
+        ClassDoc classDoc = ProcessorUtil.parserClassDoc(elementsUtil.getDocComment(classElement));
         //方法
         MethodDoc[] methodDocs = classElement.getEnclosedElements().stream()
                 .filter(it -> it instanceof ExecutableElement)
@@ -106,7 +106,7 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
     }
 
     private MethodDoc generateMethodDoc(ExecutableElement methodElement) {
-        MethodDoc methodDoc = new MethodDoc(elementsUtil.getDocComment(methodElement));
+        MethodDoc methodDoc = ProcessorUtil.parseMethodDoc(elementsUtil.getDocComment(methodElement));
         methodDoc.setName(methodElement.getSimpleName().toString());
         return methodDoc;
     }

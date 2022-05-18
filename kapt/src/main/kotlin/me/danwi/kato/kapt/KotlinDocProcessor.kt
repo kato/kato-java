@@ -8,9 +8,9 @@ import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 import me.danwi.kato.apt.ProcessorUtil
-import me.danwi.kato.apt.model.ClassDoc
-import me.danwi.kato.apt.model.MethodDoc
-import me.danwi.kato.apt.model.PropertyDoc
+import me.danwi.kato.common.javadoc.ClassDoc
+import me.danwi.kato.common.javadoc.MethodDoc
+import me.danwi.kato.common.javadoc.PropertyDoc
 
 class KotlinDocProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
     private val mapper = ObjectMapper()
@@ -55,7 +55,7 @@ class KotlinDocProcessor(private val codeGenerator: CodeGenerator) : SymbolProce
 
     fun generateClassDoc(classDeclaration: KSClassDeclaration): ClassDoc {
         //构造ClassDoc
-        val classDoc = ClassDoc(classDeclaration.docString)
+        val classDoc = ProcessorUtil.parserClassDoc(classDeclaration.docString)
         //方法
         classDoc.methods = classDeclaration.getDeclaredFunctions()
             .filter { it.isPublic() && !it.isConstructor() && !it.isInternal() && !it.isAbstract }
@@ -77,7 +77,7 @@ class KotlinDocProcessor(private val codeGenerator: CodeGenerator) : SymbolProce
     }
 
     private fun generateMethodDoc(functionDeclaration: KSFunctionDeclaration): MethodDoc {
-        val methodDoc = MethodDoc(functionDeclaration.docString)
+        val methodDoc = ProcessorUtil.parseMethodDoc(functionDeclaration.docString)
         methodDoc.name = functionDeclaration.simpleName.asString()
         return methodDoc
     }

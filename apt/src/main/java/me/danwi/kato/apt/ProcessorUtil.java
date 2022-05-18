@@ -1,11 +1,22 @@
 package me.danwi.kato.apt;
 
+import com.github.chhorz.javadoc.JavaDoc;
+import com.github.chhorz.javadoc.JavaDocParser;
+import com.github.chhorz.javadoc.JavaDocParserBuilder;
+import com.github.chhorz.javadoc.OutputType;
+import com.github.chhorz.javadoc.tags.ExceptionTag;
+import com.github.chhorz.javadoc.tags.ParamTag;
+import com.github.chhorz.javadoc.tags.ReturnTag;
+import com.github.chhorz.javadoc.tags.ThrowsTag;
+import me.danwi.kato.common.javadoc.*;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ProcessorUtil {
     private final ProcessingEnvironment env;
@@ -88,5 +99,65 @@ public class ProcessorUtil {
         }
         //如果第二个为大写
         return getterName;
+    }
+
+    public static ClassDoc parserClassDoc(String doc) {
+        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags()
+                .withCustomTag(new PropertyTag())
+                .withOutputType(OutputType.PLAIN).build();
+        JavaDoc javaDoc = javaDocParser.parse(doc);
+        ClassDoc classDoc = new ClassDoc();
+        classDoc.setDescription(javaDoc.getDescription());
+        //兼容Kotlin
+        classDoc.setProperties(
+                javaDoc.getTags(PropertyTag.class).stream()
+                        .map(it -> new PropertyDoc(it.getPropertyName(), it.getDescription()))
+                        .toArray(PropertyDoc[]::new)
+        );
+        return classDoc;
+    }
+
+    public static MethodDoc parseMethodDoc(String doc) {
+        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags().withOutputType(OutputType.PLAIN).build();
+        JavaDoc javaDoc = javaDocParser.parse(doc);
+        MethodDoc methodDoc = new MethodDoc();
+        //描述
+        methodDoc.setDescription(javaDoc.getDescription());
+        //参数
+        methodDoc.setParameters(
+                javaDoc.getTags(ParamTag.class).stream()
+                        .map(it -> {
+                            ParamDoc paramDoc = new ParamDoc();
+                            paramDoc.setName(it.getParamName());
+                            paramDoc.setDescription(it.getParamDescription());
+                            return paramDoc;
+                        })
+                        .toArray(ParamDoc[]::new)
+        );
+        //返回值
+        List<ReturnTag> returnTags = javaDoc.getTags(ReturnTag.class);
+        if (!returnTags.isEmpty()) {
+            methodDoc.setReturns(returnTags.get(0).getDescription());
+        }
+        //异常
+        List<ThrowDoc> exceptions = javaDoc.getTags(ThrowsTag.class).stream()
+                .map(it -> {
+                    ThrowDoc throwDoc = new ThrowDoc();
+                    throwDoc.setClassName(it.getClassName());
+                    throwDoc.setDescription(it.getDescription());
+                    return throwDoc;
+                })
+                .collect(Collectors.toList());
+        exceptions.addAll(
+                javaDoc.getTags(ExceptionTag.class).stream()
+                        .map(it -> {
+                            ThrowDoc throwDoc = new ThrowDoc();
+                            throwDoc.setClassName(it.getClassName());
+                            throwDoc.setDescription(it.getDescription());
+                            return throwDoc;
+                        }).collect(Collectors.toList())
+        );
+        methodDoc.setExceptions(exceptions.toArray(new ThrowDoc[0]));
+        return methodDoc;
     }
 }
