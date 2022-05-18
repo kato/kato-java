@@ -21,7 +21,7 @@ public class ParameterStub extends Stub {
     private String name = "";
 
     /**
-     * 是否为必须
+     * 可空
      */
-    private boolean required = false;
+    private boolean nullable = true;
 }
