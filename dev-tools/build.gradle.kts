@@ -13,4 +13,7 @@ dependencies {
     compileOnly("org.springframework.security:spring-security-core:5.6.3")
     compileOnly("org.springframework.boot:spring-boot-autoconfigure:2.6.7")
     compileOnly("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
+
+    compileOnly("org.projectlombok:lombok:1.18.24")
+    annotationProcessor("org.projectlombok:lombok:1.18.24")
 }
