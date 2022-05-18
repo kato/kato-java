@@ -1,0 +1,43 @@
+@use 'element-plus/theme-chalk/display.css';
+
+//基础样式
+html, body {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  height: 100%;
+  background: #f5f5fa;
+}
+
+hr {
+  height: 1px;
+  background-color: #888;
+  opacity: 0.3;
+  border: none;
+}
+
+//字体
+* {
+  font-family: "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "ff-tisa-web-pro-1", "ff-tisa-web-pro-2", "Lucida Grande", "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", "Hiragino Sans GB W3", "WenQuanYi Micro Hei", sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, p, a {
+  font-family: "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "ff-tisa-web-pro-1", "ff-tisa-web-pro-2", "Lucida Grande", "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", "Hiragino Sans GB W3", "WenQuanYi Micro Hei", sans-serif;
+}
+
+.full-height {
+  height: 100%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-view {
+  @extend .full-height ;
+  @extend .full-width;
+}
+
+#app {
+  @extend .full-view;
+}
