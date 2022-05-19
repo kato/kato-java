@@ -5,8 +5,10 @@ import com.github.chhorz.javadoc.JavaDoc;
 import com.github.chhorz.javadoc.JavaDocParser;
 import com.github.chhorz.javadoc.JavaDocParserBuilder;
 import com.github.chhorz.javadoc.OutputType;
+import com.github.chhorz.javadoc.tags.ParamTag;
 import me.danwi.kato.common.javadoc.ClassDoc;
 import me.danwi.kato.common.javadoc.MethodDoc;
+import me.danwi.kato.common.javadoc.ParamDoc;
 import me.danwi.kato.common.javadoc.PropertyDoc;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -26,6 +28,7 @@ import javax.tools.StandardLocation;
 import java.io.Writer;
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JavadocAnnotationProcessor extends AbstractProcessor {
     private final ObjectMapper mapper = new ObjectMapper();
@@ -84,7 +87,6 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-
     private ClassDoc generateClassDoc(TypeElement classElement) {
         //构造ClassDoc
         ClassDoc classDoc = ProcessorUtil.parserClassDoc(elementsUtil.getDocComment(classElement));
@@ -106,8 +108,30 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
     }
 
     private MethodDoc generateMethodDoc(ExecutableElement methodElement) {
-        MethodDoc methodDoc = ProcessorUtil.parseMethodDoc(elementsUtil.getDocComment(methodElement));
+        String doc = elementsUtil.getDocComment(methodElement);
+        MethodDoc methodDoc = ProcessorUtil.parseMethodDoc(doc);
         methodDoc.setName(methodElement.getSimpleName().toString());
+        methodDoc.setSignature(
+                methodElement.getParameters().stream()
+                        .map(it -> util.toCommonTypeName(it.asType()))
+                        .collect(Collectors.joining(","))
+        );
+        //设置参数的类型和名称,以实际参数为准,不以文档为准
+        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags().withOutputType(OutputType.PLAIN).build();
+        JavaDoc javaDoc = javaDocParser.parse(doc);
+        methodDoc.setParameters(
+                methodElement.getParameters().stream()
+                        .map(it -> {
+                            ParamDoc paramDoc = new ParamDoc();
+                            paramDoc.setName(it.getSimpleName().toString());
+                            //去文档中查找
+                            javaDoc.getTags(ParamTag.class).stream()
+                                    .filter(tag -> tag.getParamName().equals(paramDoc.getName())).findAny()
+                                    .ifPresent(paramTag -> paramDoc.setDescription(paramTag.getParamDescription()));
+                            return paramDoc;
+                        })
+                        .toArray(ParamDoc[]::new)
+        );
         return methodDoc;
     }
 

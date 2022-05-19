@@ -15,6 +15,10 @@ public class MethodDoc {
      */
     private String description;
     /**
+     * 方法签名
+     */
+    private String signature;
+    /**
      * 参数文档
      */
     private ParamDoc[] parameters;

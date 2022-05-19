@@ -5,13 +5,13 @@ import com.github.chhorz.javadoc.JavaDocParser;
 import com.github.chhorz.javadoc.JavaDocParserBuilder;
 import com.github.chhorz.javadoc.OutputType;
 import com.github.chhorz.javadoc.tags.ExceptionTag;
-import com.github.chhorz.javadoc.tags.ParamTag;
 import com.github.chhorz.javadoc.tags.ReturnTag;
 import com.github.chhorz.javadoc.tags.ThrowsTag;
 import me.danwi.kato.common.javadoc.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -52,12 +52,36 @@ public class ProcessorUtil {
         return getPackageElement(element.getEnclosingElement());
     }
 
-
     public Element getSuperClass(Element element) {
         List<? extends TypeMirror> supertypes = this.types.directSupertypes(element.asType());
         if (supertypes.isEmpty())
             return null;
         return this.types.asElement(supertypes.get(0));
+    }
+
+    public String toCommonTypeName(TypeMirror type) {
+        switch (type.getKind()) {
+            case BOOLEAN:
+            case BYTE:
+            case SHORT:
+            case INT:
+            case LONG:
+            case CHAR:
+            case FLOAT:
+            case DOUBLE:
+                return types.getPrimitiveType(type.getKind()).toString();
+            case ARRAY:
+                String elementTypeName = toCommonTypeName(((ArrayType) type).getComponentType());
+                return elementTypeName + "[]";
+            case VOID:
+                return "void";
+            case NULL:
+                return "null";
+            case DECLARED:
+                return getQualifiedName(type);
+            default:
+                return type.toString();
+        }
     }
 
     public static final String GET_PREFIX = "get";
@@ -123,17 +147,6 @@ public class ProcessorUtil {
         MethodDoc methodDoc = new MethodDoc();
         //描述
         methodDoc.setDescription(javaDoc.getDescription());
-        //参数
-        methodDoc.setParameters(
-                javaDoc.getTags(ParamTag.class).stream()
-                        .map(it -> {
-                            ParamDoc paramDoc = new ParamDoc();
-                            paramDoc.setName(it.getParamName());
-                            paramDoc.setDescription(it.getParamDescription());
-                            return paramDoc;
-                        })
-                        .toArray(ParamDoc[]::new)
-        );
         //返回值
         List<ReturnTag> returnTags = javaDoc.getTags(ReturnTag.class);
         if (!returnTags.isEmpty()) {
