@@ -2,9 +2,12 @@ package me.danwi.kato.apt;
 
 import com.github.chhorz.javadoc.tags.StructuredTag;
 
+/**
+ * 属性文档标记
+ * 用于兼容kotlin的@property标记
+ */
 public class PropertyTag extends StructuredTag {
     private static final String TAG_NAME = "property";
-
     private static final String PROPERTY_NAME = "propertyName";
     private static final String DESCRIPTION = "description";
 

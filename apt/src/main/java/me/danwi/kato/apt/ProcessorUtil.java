@@ -1,38 +1,53 @@
 package me.danwi.kato.apt;
 
-import com.github.chhorz.javadoc.JavaDoc;
 import com.github.chhorz.javadoc.JavaDocParser;
 import com.github.chhorz.javadoc.JavaDocParserBuilder;
 import com.github.chhorz.javadoc.OutputType;
-import com.github.chhorz.javadoc.tags.ExceptionTag;
-import com.github.chhorz.javadoc.tags.ReturnTag;
-import com.github.chhorz.javadoc.tags.ThrowsTag;
-import me.danwi.kato.common.javadoc.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
+/**
+ * 注解处理器辅助类
+ */
 public class ProcessorUtil {
-    private final ProcessingEnvironment env;
+    /**
+     * javadoc解析器
+     */
+    public static final JavaDocParser JavadocParser = JavaDocParserBuilder
+            .withBasicTags().withCustomTag(new PropertyTag())
+            .withOutputType(OutputType.PLAIN).build();
     private final Types types;
-    private final Elements elements;
 
     public ProcessorUtil(ProcessingEnvironment env) {
-        this.env = env;
         this.types = env.getTypeUtils();
-        this.elements = env.getElementUtils();
+        Elements elements = env.getElementUtils();
     }
 
+    /**
+     * 获取类型全限定名
+     *
+     * @param type 类型
+     * @return 全限定名
+     */
     public String getQualifiedName(TypeMirror type) {
         return getQualifiedName(types.asElement(type));
     }
 
+    /**
+     * 获取元素的全限定名
+     *
+     * @param element 元素
+     * @return 全限定名
+     */
     public String getQualifiedName(Element element) {
         if (element instanceof QualifiedNameable) {
             return ((QualifiedNameable) element).getQualifiedName().toString();
@@ -40,23 +55,41 @@ public class ProcessorUtil {
         return element.toString();
     }
 
+    /**
+     * 获取类型的父类
+     *
+     * @param type 类型
+     * @return 父类
+     */
     public Element getSuperClass(TypeMirror type) {
         return getSuperClass(types.asElement(type));
     }
 
+    /**
+     * 获取元素的父类
+     *
+     * @param element 元素
+     * @return 父类
+     */
+    public Element getSuperClass(Element element) {
+        List<? extends TypeMirror> supertypes = this.types.directSupertypes(element.asType());
+        if (supertypes.isEmpty())
+            return null;
+        return this.types.asElement(supertypes.get(0));
+    }
+
+    /**
+     * 获取元素所在的包
+     *
+     * @param element 元素
+     * @return 所在的包元素
+     */
     public PackageElement getPackageElement(Element element) {
         if (element == null)
             return null;
         if (element instanceof PackageElement)
             return (PackageElement) element;
         return getPackageElement(element.getEnclosingElement());
-    }
-
-    public Element getSuperClass(Element element) {
-        List<? extends TypeMirror> supertypes = this.types.directSupertypes(element.asType());
-        if (supertypes.isEmpty())
-            return null;
-        return this.types.asElement(supertypes.get(0));
     }
 
     public String toCommonTypeName(TypeMirror type) {
@@ -84,9 +117,12 @@ public class ProcessorUtil {
         }
     }
 
-    public static final String GET_PREFIX = "get";
-    public static final String IS_PREFIX = "is";
-
+    /**
+     * 元素是否是一个getter函数
+     *
+     * @param element 元素
+     * @return 如果是一个getter函数, 则返回对于的属性名, 如果不是则返回空
+     */
     public static String isGetter(Element element) {
         if (!(element instanceof ExecutableElement))
             return null;
@@ -104,9 +140,9 @@ public class ProcessorUtil {
      */
     public static String getterNameToPropertyName(String getterName) {
         //去掉get/is前缀
-        if (getterName.startsWith(GET_PREFIX)) {
+        if (getterName.startsWith("get")) {
             getterName = getterName.substring(3);
-        } else if (getterName.startsWith(IS_PREFIX)) {
+        } else if (getterName.startsWith("is")) {
             getterName = getterName; //Do nothing
         } else {
             return null;
@@ -123,54 +159,5 @@ public class ProcessorUtil {
         }
         //如果第二个为大写
         return getterName;
-    }
-
-    public static ClassDoc parserClassDoc(String doc) {
-        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags()
-                .withCustomTag(new PropertyTag())
-                .withOutputType(OutputType.PLAIN).build();
-        JavaDoc javaDoc = javaDocParser.parse(doc);
-        ClassDoc classDoc = new ClassDoc();
-        classDoc.setDescription(javaDoc.getDescription());
-        //兼容Kotlin
-        classDoc.setProperties(
-                javaDoc.getTags(PropertyTag.class).stream()
-                        .map(it -> new PropertyDoc(it.getPropertyName(), it.getDescription()))
-                        .toArray(PropertyDoc[]::new)
-        );
-        return classDoc;
-    }
-
-    public static MethodDoc parseMethodDoc(String doc) {
-        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags().withOutputType(OutputType.PLAIN).build();
-        JavaDoc javaDoc = javaDocParser.parse(doc);
-        MethodDoc methodDoc = new MethodDoc();
-        //描述
-        methodDoc.setDescription(javaDoc.getDescription());
-        //返回值
-        List<ReturnTag> returnTags = javaDoc.getTags(ReturnTag.class);
-        if (!returnTags.isEmpty()) {
-            methodDoc.setReturns(returnTags.get(0).getDescription());
-        }
-        //异常
-        List<ThrowDoc> exceptions = javaDoc.getTags(ThrowsTag.class).stream()
-                .map(it -> {
-                    ThrowDoc throwDoc = new ThrowDoc();
-                    throwDoc.setClassName(it.getClassName());
-                    throwDoc.setDescription(it.getDescription());
-                    return throwDoc;
-                })
-                .collect(Collectors.toList());
-        exceptions.addAll(
-                javaDoc.getTags(ExceptionTag.class).stream()
-                        .map(it -> {
-                            ThrowDoc throwDoc = new ThrowDoc();
-                            throwDoc.setClassName(it.getClassName());
-                            throwDoc.setDescription(it.getDescription());
-                            return throwDoc;
-                        }).collect(Collectors.toList())
-        );
-        methodDoc.setExceptions(exceptions.toArray(new ThrowDoc[0]));
-        return methodDoc;
     }
 }

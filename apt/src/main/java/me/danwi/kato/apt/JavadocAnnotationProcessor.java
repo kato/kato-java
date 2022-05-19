@@ -2,14 +2,11 @@ package me.danwi.kato.apt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.chhorz.javadoc.JavaDoc;
-import com.github.chhorz.javadoc.JavaDocParser;
-import com.github.chhorz.javadoc.JavaDocParserBuilder;
-import com.github.chhorz.javadoc.OutputType;
+import com.github.chhorz.javadoc.tags.ExceptionTag;
 import com.github.chhorz.javadoc.tags.ParamTag;
-import me.danwi.kato.common.javadoc.ClassDoc;
-import me.danwi.kato.common.javadoc.MethodDoc;
-import me.danwi.kato.common.javadoc.ParamDoc;
-import me.danwi.kato.common.javadoc.PropertyDoc;
+import com.github.chhorz.javadoc.tags.ReturnTag;
+import com.github.chhorz.javadoc.tags.ThrowsTag;
+import me.danwi.kato.common.javadoc.*;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
@@ -21,15 +18,18 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.Writer;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * JavaDoc注解处理,用于将JavaDoc的内容保存到运行时
+ */
 public class JavadocAnnotationProcessor extends AbstractProcessor {
     private final ObjectMapper mapper = new ObjectMapper();
     private ProcessorUtil util;
@@ -41,10 +41,19 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         env = processingEnv;
         util = new ProcessorUtil(processingEnv);
-        Types typesUtil = processingEnv.getTypeUtils();
         elementsUtil = processingEnv.getElementUtils();
         messager = processingEnv.getMessager();
         super.init(processingEnv);
+    }
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Collections.singleton("*");
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
     }
 
     @Override
@@ -88,8 +97,17 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
     }
 
     private ClassDoc generateClassDoc(TypeElement classElement) {
+        //解析javadoc
+        JavaDoc javaDoc = ProcessorUtil.JavadocParser.parse(elementsUtil.getDocComment(classElement));
         //构造ClassDoc
-        ClassDoc classDoc = ProcessorUtil.parserClassDoc(elementsUtil.getDocComment(classElement));
+        ClassDoc classDoc = new ClassDoc();
+        classDoc.setDescription(javaDoc.getDescription());
+        //兼容Kotlin
+        classDoc.setProperties(
+                javaDoc.getTags(PropertyTag.class).stream()
+                        .map(it -> new PropertyDoc(it.getPropertyName(), it.getDescription()))
+                        .toArray(PropertyDoc[]::new)
+        );
         //方法
         MethodDoc[] methodDocs = classElement.getEnclosedElements().stream()
                 .filter(it -> it instanceof ExecutableElement)
@@ -108,17 +126,45 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
     }
 
     private MethodDoc generateMethodDoc(ExecutableElement methodElement) {
-        String doc = elementsUtil.getDocComment(methodElement);
-        MethodDoc methodDoc = ProcessorUtil.parseMethodDoc(doc);
+        //解析文档
+        JavaDoc javaDoc = ProcessorUtil.JavadocParser.parse(elementsUtil.getDocComment(methodElement));
+        //构造MethodDoc
+        MethodDoc methodDoc = new MethodDoc();
+        //名称
         methodDoc.setName(methodElement.getSimpleName().toString());
+        //描述
+        methodDoc.setDescription(javaDoc.getDescription());
+        //方法签名,用于在反射是否做重载后的唯一匹配
         methodDoc.setSignature(
                 methodElement.getParameters().stream()
                         .map(it -> util.toCommonTypeName(it.asType()))
                         .collect(Collectors.joining(","))
         );
+        //返回值
+        List<ReturnTag> returnTags = javaDoc.getTags(ReturnTag.class);
+        if (!returnTags.isEmpty()) {
+            methodDoc.setReturns(returnTags.get(0).getDescription());
+        }
+        //异常
+        List<ThrowDoc> exceptions = javaDoc.getTags(ThrowsTag.class).stream()
+                .map(it -> {
+                    ThrowDoc throwDoc = new ThrowDoc();
+                    throwDoc.setClassName(it.getClassName());
+                    throwDoc.setDescription(it.getDescription());
+                    return throwDoc;
+                })
+                .collect(Collectors.toList());
+        exceptions.addAll(
+                javaDoc.getTags(ExceptionTag.class).stream()
+                        .map(it -> {
+                            ThrowDoc throwDoc = new ThrowDoc();
+                            throwDoc.setClassName(it.getClassName());
+                            throwDoc.setDescription(it.getDescription());
+                            return throwDoc;
+                        }).collect(Collectors.toList())
+        );
+        methodDoc.setExceptions(exceptions.toArray(new ThrowDoc[0]));
         //设置参数的类型和名称,以实际参数为准,不以文档为准
-        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags().withOutputType(OutputType.PLAIN).build();
-        JavaDoc javaDoc = javaDocParser.parse(doc);
         methodDoc.setParameters(
                 methodElement.getParameters().stream()
                         .map(it -> {
@@ -138,22 +184,11 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
     private PropertyDoc generatePropertyDoc(ExecutableElement element) {
         //解析java doc
         String javadocStr = elementsUtil.getDocComment(element);
-        JavaDocParser javaDocParser = JavaDocParserBuilder.withBasicTags().withOutputType(OutputType.PLAIN).build();
-        JavaDoc javaDoc = javaDocParser.parse(javadocStr);
+        JavaDoc javaDoc = ProcessorUtil.JavadocParser.parse(javadocStr);
         //构造PropertyDoc
         return new PropertyDoc(
                 ProcessorUtil.getterNameToPropertyName(element.getSimpleName().toString()),
                 javaDoc.getDescription()
         );
-    }
-
-    @Override
-    public Set<String> getSupportedAnnotationTypes() {
-        return Collections.singleton("*");
-    }
-
-    @Override
-    public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.latestSupported();
     }
 }
