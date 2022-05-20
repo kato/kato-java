@@ -32,5 +32,5 @@ public class MethodStub extends Stub {
     /**
      * 方法可能产生的异常合集
      */
-    private List<StructType> exceptions = new LinkedList<>();
+    private List<ExceptionStub> exceptions = new LinkedList<>();
 }

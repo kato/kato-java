@@ -16,7 +16,7 @@ public class StructType extends QualifiedStub implements Type {
     /**
      * 泛型参数
      */
-    private List<Type> genericArguments = new LinkedList<>();
+    private List<VariableType> genericArguments = new LinkedList<>();
 
     @Override
     public Kind getKind() {
