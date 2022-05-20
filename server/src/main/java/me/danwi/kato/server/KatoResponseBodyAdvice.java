@@ -28,7 +28,10 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
         Method method = returnType.getMethod();
         if (method == null)
             return false;
-        return method.getAnnotation(PassByKato.class) == null && method.getDeclaringClass().getAnnotation(PassByKato.class) == null;
+        Class<?> clazz = method.getDeclaringClass();
+        return clazz.getAnnotation(KatoService.class) != null
+                && clazz.getAnnotation(PassByKato.class) == null
+                && method.getAnnotation(PassByKato.class) == null;
     }
 
     @Override
