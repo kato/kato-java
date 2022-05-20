@@ -101,7 +101,8 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
         JavaDoc javaDoc = ProcessorUtil.JavadocParser.parse(elementsUtil.getDocComment(classElement));
         //构造ClassDoc
         ClassDoc classDoc = new ClassDoc();
-        classDoc.setDescription(javaDoc.getDescription());
+        if (!javaDoc.getDescription().isEmpty())
+            classDoc.setDescription(javaDoc.getDescription());
         //兼容Kotlin
         classDoc.setProperties(
                 javaDoc.getTags(PropertyTag.class).stream()
@@ -133,13 +134,10 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
         //名称
         methodDoc.setName(methodElement.getSimpleName().toString());
         //描述
-        methodDoc.setDescription(javaDoc.getDescription());
+        if (!javaDoc.getDescription().isEmpty())
+            methodDoc.setDescription(javaDoc.getDescription());
         //方法签名,用于在反射是否做重载后的唯一匹配
-        methodDoc.setSignature(
-                methodElement.getParameters().stream()
-                        .map(it -> util.toCommonTypeName(it.asType()))
-                        .collect(Collectors.joining(","))
-        );
+        methodDoc.setSignature(util.generateMethodSignature(methodElement));
         //返回值
         List<ReturnTag> returnTags = javaDoc.getTags(ReturnTag.class);
         if (!returnTags.isEmpty()) {
