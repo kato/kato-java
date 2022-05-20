@@ -14,6 +14,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 注解处理器辅助类
@@ -92,7 +93,14 @@ public class ProcessorUtil {
         return getPackageElement(element.getEnclosingElement());
     }
 
-    public String toCommonTypeName(TypeMirror type) {
+    /**
+     * 将类型转换成规范化的字符串
+     * 要和运行时的实现保持一致
+     *
+     * @param type 类型
+     * @return 类型字符串表达
+     */
+    private String getCanonicalName(TypeMirror type) {
         switch (type.getKind()) {
             case BOOLEAN:
             case BYTE:
@@ -103,18 +111,31 @@ public class ProcessorUtil {
             case FLOAT:
             case DOUBLE:
                 return types.getPrimitiveType(type.getKind()).toString();
-            case ARRAY:
-                String elementTypeName = toCommonTypeName(((ArrayType) type).getComponentType());
-                return elementTypeName + "[]";
             case VOID:
                 return "void";
             case NULL:
                 return "null";
             case DECLARED:
                 return getQualifiedName(type);
+            case ARRAY:
+                return getCanonicalName(((ArrayType) type).getComponentType()) + "[]";
             default:
                 return type.toString();
         }
+    }
+
+    /**
+     * 生成方法签名
+     * 用于在运行时做重载方法的匹配
+     *
+     * @param element 方法元素
+     * @return 签名
+     */
+    public String generateMethodSignature(ExecutableElement element) {
+        String parameterTypes = element.getParameters().stream()
+                .map(it -> getCanonicalName(types.erasure(it.asType())))
+                .collect(Collectors.joining(","));
+        return element.getSimpleName().toString() + "(" + parameterTypes + ")";
     }
 
     /**
