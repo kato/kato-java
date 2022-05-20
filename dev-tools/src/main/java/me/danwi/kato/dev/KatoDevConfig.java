@@ -16,6 +16,11 @@ public class KatoDevConfig implements WebMvcConfigurer {
         return new StubController();
     }
 
+    @Bean("me.danwi.kato.dev.IndexerFactory")
+    public IndexerFactory indexerFactory() {
+        return new IndexerFactory();
+    }
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
