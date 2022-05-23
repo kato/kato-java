@@ -137,48 +137,4 @@ public class ProcessorUtil {
                 .collect(Collectors.joining(","));
         return element.getSimpleName().toString() + "(" + parameterTypes + ")";
     }
-
-    /**
-     * 元素是否是一个getter函数
-     *
-     * @param element 元素
-     * @return 如果是一个getter函数, 则返回对于的属性名, 如果不是则返回空
-     */
-    public static String isGetter(Element element) {
-        if (!(element instanceof ExecutableElement))
-            return null;
-        ExecutableElement executableElement = (ExecutableElement) element;
-        if (!executableElement.getParameters().isEmpty())
-            return null;
-        return getterNameToPropertyName(executableElement.getSimpleName().toString());
-    }
-
-    /**
-     * getter方法名转换成属性名
-     *
-     * @param getterName getter方法名
-     * @return 属性名, 如果不是合法的getter方法名, 则返回空
-     */
-    public static String getterNameToPropertyName(String getterName) {
-        //去掉get/is前缀
-        if (getterName.startsWith("get")) {
-            getterName = getterName.substring(3);
-        } else if (getterName.startsWith("is")) {
-            getterName = getterName; //Do nothing
-        } else {
-            return null;
-        }
-        //剩余部分为空
-        if (getterName.isEmpty())
-            return null;
-        //一个自负
-        if (getterName.length() == 1)
-            return getterName.toLowerCase();
-        //如果是多个字符,且第二个为小写
-        if (Character.isLowerCase(getterName.charAt(1))) {
-            return getterName.substring(0, 1).toLowerCase() + getterName.substring(1);
-        }
-        //如果第二个为大写
-        return getterName;
-    }
 }

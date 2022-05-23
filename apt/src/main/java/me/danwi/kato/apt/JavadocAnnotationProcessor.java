@@ -113,16 +113,9 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
         MethodDoc[] methodDocs = classElement.getEnclosedElements().stream()
                 .filter(it -> it instanceof ExecutableElement)
                 .filter(it -> it.getKind() == ElementKind.METHOD)
-                .filter(it -> ProcessorUtil.isGetter(it) == null)
                 .map(it -> generateMethodDoc((ExecutableElement) it))
                 .toArray(MethodDoc[]::new);
         classDoc.setMethods(methodDocs);
-        //字段Getter TODO: 添加lombok的支持
-        PropertyDoc[] propertyDocs = classElement.getEnclosedElements().stream()
-                .filter(it -> ProcessorUtil.isGetter(it) != null)
-                .map(it -> generatePropertyDoc((ExecutableElement) it))
-                .toArray(PropertyDoc[]::new);
-        classDoc.setProperties(propertyDocs);
         return classDoc;
     }
 
@@ -177,16 +170,5 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
                         .toArray(ParamDoc[]::new)
         );
         return methodDoc;
-    }
-
-    private PropertyDoc generatePropertyDoc(ExecutableElement element) {
-        //解析java doc
-        String javadocStr = elementsUtil.getDocComment(element);
-        JavaDoc javaDoc = ProcessorUtil.JavadocParser.parse(javadocStr);
-        //构造PropertyDoc
-        return new PropertyDoc(
-                ProcessorUtil.getterNameToPropertyName(element.getSimpleName().toString()),
-                javaDoc.getDescription()
-        );
     }
 }
