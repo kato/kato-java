@@ -329,25 +329,35 @@ public class Indexer {
     }
 
     private ArrayType generateListType(ParameterizedType type) {
-        if (!type.getRawType().getTypeName().equals("java.util.List"))
-            return null;
-        Type[] actualTypeArguments = type.getActualTypeArguments();
-        me.danwi.kato.dev.stub.type.Type elementType = generateType(actualTypeArguments[0]);
-        ArrayType arrayType = new ArrayType();
-        arrayType.setElement(elementType);
-        return arrayType;
+        Type rawType = type.getRawType();
+        if (rawType instanceof Class) {
+            List<Class<?>> superClassWithSelf = getSuperClassWithSelf((Class<?>) rawType);
+            if (superClassWithSelf.stream().anyMatch(it -> it.getName().equals("java.util.List"))) {
+                Type[] actualTypeArguments = type.getActualTypeArguments();
+                me.danwi.kato.dev.stub.type.Type elementType = generateType(actualTypeArguments[0]);
+                ArrayType arrayType = new ArrayType();
+                arrayType.setElement(elementType);
+                return arrayType;
+            }
+        }
+        return null;
     }
 
     private MapType generateMapType(ParameterizedType type) {
-        if (!type.getRawType().getTypeName().equals("java.util.Map"))
-            return null;
-        Type[] actualTypeArguments = type.getActualTypeArguments();
-        me.danwi.kato.dev.stub.type.Type keyType = generateType(actualTypeArguments[0]);
-        me.danwi.kato.dev.stub.type.Type valueType = generateType(actualTypeArguments[1]);
-        MapType mapType = new MapType();
-        mapType.setKey(keyType);
-        mapType.setValue(valueType);
-        return mapType;
+        Type rawType = type.getRawType();
+        if (rawType instanceof Class) {
+            List<Class<?>> superClassWithSelf = getSuperClassWithSelf((Class<?>) rawType);
+            if (superClassWithSelf.stream().anyMatch(it -> it.getName().equals("java.util.Map"))) {
+                Type[] actualTypeArguments = type.getActualTypeArguments();
+                me.danwi.kato.dev.stub.type.Type keyType = generateType(actualTypeArguments[0]);
+                me.danwi.kato.dev.stub.type.Type valueType = generateType(actualTypeArguments[1]);
+                MapType mapType = new MapType();
+                mapType.setKey(keyType);
+                mapType.setValue(valueType);
+                return mapType;
+            }
+        }
+        return null;
     }
 
     //枚举
