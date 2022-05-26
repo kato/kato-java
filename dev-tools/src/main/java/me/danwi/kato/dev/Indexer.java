@@ -8,6 +8,9 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -417,21 +420,80 @@ public class Indexer {
             String namespace = beanClass.getPackage().getName();
             String secondaryNamespace = getSecondaryNamespace(beanClass);
             String name = beanClass.getName();
-            ClassDoc classDoc = JavaDoc.forClass(beanClass);
+
+            //获取到所有父类(包括自己)的文档
+            List<ClassDoc> allSuperClassDocs = getSuperClassWithSelf(beanClass).stream()
+                    .map(JavaDoc::forClass)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
 
             ModelStub modelStub = new ModelStub();
             modelStub.setNamespace(namespace);
             modelStub.setSecondaryNamespace(secondaryNamespace);
             modelStub.setName(name);
             modelStub.setDescription(
-                    getSuperClassWithSelf(beanClass).stream()
-                            .map(JavaDoc::forClass)
-                            .filter(Objects::nonNull)
+                    allSuperClassDocs.stream()
                             .map(ClassDoc::getDescription)
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList())
             );
             modelStub.setGenericArgumentNames(Arrays.stream(beanClass.getTypeParameters()).map(Type::getTypeName).collect(Collectors.toList()));
+
+            try {
+                //处理bean中的字段
+                BeanInfo beanInfo = Introspector.getBeanInfo(beanClass, Object.class);
+                PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+                modelStub.setFields(
+                        Arrays.stream(propertyDescriptors)
+                                .map(it -> {
+                                    FieldStub fieldStub = new FieldStub();
+                                    fieldStub.setName(it.getName());
+                                    //获取描述
+                                    String description = null;
+                                    //获取读取方法
+                                    Method readMethod = it.getReadMethod();
+                                    if (readMethod == null) {
+                                        //不存在读取方法,则不理会
+                                        return null;
+                                    } else {
+                                        //设置返回值的类型
+                                        fieldStub.setType(generateType(readMethod.getGenericReturnType()));
+                                        //获取描述
+                                        MethodDoc methodDoc = JavaDoc.forMethod(readMethod);
+                                        if (methodDoc.getDescription() != null)
+                                            description = methodDoc.getDescription();
+                                    }
+                                    //如果read方法上获取不到描述
+                                    if (description == null) {
+                                        //从write方法上获取
+                                        Method writeMethod = it.getWriteMethod();
+                                        if (writeMethod != null) {
+                                            //获取描述
+                                            MethodDoc methodDoc = JavaDoc.forMethod(writeMethod);
+                                            if (methodDoc.getDescription() != null)
+                                                description = methodDoc.getDescription();
+                                        }
+                                    }
+                                    //如果write方法上获取不到,则尝试从@property文档读取(kotlin兼容)
+                                    if (description == null) {
+                                        description = allSuperClassDocs.stream()
+                                                .flatMap(doc -> Arrays.stream(doc.getProperties()).filter(p -> p.getName().equals(fieldStub.getName())))
+                                                .map(PropertyDoc::getDescription)
+                                                .findFirst().orElse(null);
+                                    }
+                                    if (description != null) {
+                                        List<String> descriptions = new LinkedList<>();
+                                        descriptions.add(description);
+                                        fieldStub.setDescription(descriptions);
+                                    }
+                                    return fieldStub;
+                                })
+                                .collect(Collectors.toList())
+                );
+            } catch (Exception ignored) {
+            }
+
             //添加到Context中
             modelsContext.put(qualifiedName, modelStub);
         }
