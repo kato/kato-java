@@ -18,4 +18,8 @@ public class ClassDoc {
      * Getter方法文档
      */
     private PropertyDoc[] properties;
+    /**
+     * 常量文档(枚举)
+     */
+    private ConstantDoc[] constants;
 }

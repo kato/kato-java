@@ -2,7 +2,6 @@ package me.danwi.kato.dev.stub;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.danwi.kato.dev.stub.type.EnumType;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -27,5 +26,5 @@ public class ApplicationStub extends Stub {
     /**
      * 枚举常量集合
      */
-    private List<EnumType> enums = new LinkedList<>();
+    private List<EnumStub> enums = new LinkedList<>();
 }

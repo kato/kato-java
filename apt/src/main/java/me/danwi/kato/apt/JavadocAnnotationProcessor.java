@@ -13,10 +13,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
@@ -116,6 +113,13 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
                 .map(it -> generateMethodDoc((ExecutableElement) it))
                 .toArray(MethodDoc[]::new);
         classDoc.setMethods(methodDocs);
+        //枚举变量的常量值
+        ConstantDoc[] constantDocs = classElement.getEnclosedElements().stream()
+                .filter(it -> it.getKind() == ElementKind.ENUM_CONSTANT)
+                .filter(it -> it instanceof VariableElement)
+                .map(it -> generateEnumConstant((VariableElement) it))
+                .toArray(ConstantDoc[]::new);
+        classDoc.setConstants(constantDocs);
         return classDoc;
     }
 
@@ -170,5 +174,15 @@ public class JavadocAnnotationProcessor extends AbstractProcessor {
                         .toArray(ParamDoc[]::new)
         );
         return methodDoc;
+    }
+
+    private ConstantDoc generateEnumConstant(VariableElement element) {
+        String name = element.getSimpleName().toString();
+        JavaDoc javaDoc = ProcessorUtil.JavadocParser.parse(elementsUtil.getDocComment(element));
+        ConstantDoc constantDoc = new ConstantDoc();
+        constantDoc.setName(name);
+        if (!javaDoc.getDescription().isEmpty())
+            constantDoc.setDescription(javaDoc.getDescription());
+        return constantDoc;
     }
 }

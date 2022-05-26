@@ -22,7 +22,7 @@ public class Indexer {
 
     private volatile ApplicationStub applicationStubCache;
 
-    private final Map<String, EnumType> enumsContext = new HashMap<>();
+    private final Map<String, EnumStub> enumsContext = new HashMap<>();
     private final Map<String, ModelStub> modelsContext = new HashMap<>();
 
     public Indexer(Map<String, Object> controllers) {
@@ -365,24 +365,10 @@ public class Indexer {
 
     //枚举
     private RefType generateEnumType(Class<?> enumClazz) {
-        //判断上下文是否存在
-        String qualifiedName = enumClazz.getName();
-        if (!enumsContext.containsKey(qualifiedName)) {
-            String namespace = enumClazz.getPackage().getName();
-            String secondaryNamespace = getSecondaryNamespace(enumClazz);
-            String name = enumClazz.getSimpleName();
-
-            Object[] enumConstants = enumClazz.getEnumConstants();
-            EnumType enumType = new EnumType();
-            enumType.setNamespace(namespace);
-            enumType.setSecondaryNamespace(secondaryNamespace);
-            enumType.setName(name);
-            enumType.setElements(Arrays.stream(enumConstants).map(Object::toString).collect(Collectors.toList()));
-            //添加到Context中
-            enumsContext.put(qualifiedName, enumType);
-        }
-
-        return RefType.fromQualified(enumsContext.get(qualifiedName));
+        //注册枚举
+        EnumStub enumStub = registerEnum(enumClazz);
+        //构建引用
+        return RefType.fromQualified(enumStub);
     }
 
     //构造类型
@@ -498,6 +484,53 @@ public class Indexer {
             modelsContext.put(qualifiedName, modelStub);
         }
         return modelsContext.get(qualifiedName);
+    }
+
+    private EnumStub registerEnum(Class<?> enumClass) {
+        //判断上下文是否存在
+        String qualifiedName = enumClass.getName();
+        if (!enumsContext.containsKey(qualifiedName)) {
+            String namespace = enumClass.getPackage().getName();
+            String secondaryNamespace = getSecondaryNamespace(enumClass);
+            String name = enumClass.getSimpleName();
+
+            EnumStub enumStub = new EnumStub();
+            enumStub.setNamespace(namespace);
+            enumStub.setSecondaryNamespace(secondaryNamespace);
+            enumStub.setName(name);
+
+            //常量
+            List<String> enumConstants = Arrays.stream(enumClass.getEnumConstants()).map(Object::toString).collect(Collectors.toList());
+            enumStub.setElements(enumConstants);
+
+            //Java文档
+            ClassDoc classDoc = JavaDoc.forClass(enumClass);
+            if (classDoc != null) {
+                //整个枚举类的文档
+                if (!classDoc.getDescription().isEmpty()) {
+                    List<String> descriptions = new LinkedList<>();
+                    descriptions.add(classDoc.getDescription());
+                    enumStub.setDescription(descriptions);
+                }
+                //每一个常量的文档
+                enumStub.setConstantDescriptions(
+                        enumConstants.stream()
+                                .map(it -> Arrays.stream(classDoc.getConstants()).filter(c -> c.getName().equals(it)).findFirst().orElse(null))
+                                .map(it -> it == null ? null : it.getDescription())
+                                .collect(Collectors.toList())
+                );
+            } else {
+                //找不着文档也要填充为空
+                enumStub.setConstantDescriptions(
+                        enumConstants.stream().map(it -> (String) null).collect(Collectors.toList())
+                );
+            }
+
+            //添加到Context中
+            enumsContext.put(qualifiedName, enumStub);
+        }
+
+        return enumsContext.get(qualifiedName);
     }
 
     private List<Class<?>> getSuperClassWithSelf(Class<?> clazz) {
