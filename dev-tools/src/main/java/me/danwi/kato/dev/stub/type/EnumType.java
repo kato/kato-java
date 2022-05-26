@@ -8,18 +8,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 构造类型
+ * 枚举类型
  */
 @Getter
 @Setter
-public class StructType extends QualifiedStub implements Type {
-    /**
-     * 泛型参数
-     */
-    private List<String> genericArgumentNames = new LinkedList<>();
+public class EnumType extends QualifiedStub implements Type {
+    private List<String> elements = new LinkedList<>();
 
     @Override
     public Kind getKind() {
-        return Kind.Struct;
+        return Kind.Enum;
     }
 }

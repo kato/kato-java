@@ -5,7 +5,9 @@ public interface Type {
         Variable, //泛型变量占位符
         Primitive, //预置类型
         Struct, //构造类型
+        Enum,  //枚举
         Any, //任意类型
+        Unit, //空,void
 
         //特地优化
         Array, //数组

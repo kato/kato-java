@@ -20,6 +20,16 @@ public class MethodStub extends Stub {
     private String name = "";
 
     /**
+     * HTTP方法
+     */
+    private String httpMethod = "GET";
+
+    /**
+     * HTTP路径
+     */
+    private String httpPath = "/";
+
+    /**
      * 参数合集
      */
     private List<ParameterStub> parameters = new LinkedList<>();
@@ -27,7 +37,7 @@ public class MethodStub extends Stub {
     /**
      * 返回值
      */
-    private Type returns = null;
+    private ReturnStub returns = null;
 
     /**
      * 方法可能产生的异常合集
