@@ -13,8 +13,32 @@ import java.lang.annotation.Target;
 @FeignClient(configuration = KatoClientConfig.class)
 public @interface KatoClient {
     @AliasFor(annotation = FeignClient.class)
-    String value();
+    String value() default "";
 
     @AliasFor(annotation = FeignClient.class)
-    String url();
+    String contextId() default "";
+
+    @AliasFor(annotation = FeignClient.class)
+    String name() default "";
+
+    @AliasFor(annotation = FeignClient.class)
+    String[] qualifiers() default {};
+
+    @AliasFor(annotation = FeignClient.class)
+    String url() default "";
+
+    @AliasFor(annotation = FeignClient.class)
+    boolean decode404() default false;
+
+    @AliasFor(annotation = FeignClient.class)
+    Class<?> fallback() default void.class;
+
+    @AliasFor(annotation = FeignClient.class)
+    Class<?> fallbackFactory() default void.class;
+
+    @AliasFor(annotation = FeignClient.class)
+    String path() default "";
+
+    @AliasFor(annotation = FeignClient.class)
+    boolean primary() default true;
 }
