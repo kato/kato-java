@@ -20,7 +20,7 @@ public class KatoResultDecoder implements Decoder {
             return null;
         //反序列化结果
         String bodyStr = Util.toString(response.body().asReader(Util.UTF_8));
-        if (Util.isBlank()) return null
+        if (Util.isBlank(bodyStr)) return null;
         return mapper.readValue(bodyStr, TypeFactory.defaultInstance().constructType(type));
     }
 }
