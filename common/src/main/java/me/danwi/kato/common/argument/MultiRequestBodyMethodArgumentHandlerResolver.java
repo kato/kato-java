@@ -1,7 +1,5 @@
 package me.danwi.kato.common.argument;
 
-import cn.hutool.core.io.IoUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,8 +14,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -41,7 +37,7 @@ import java.util.Objects;
  */
 public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMethodArgumentResolver {
 
-    private static final String BODY_KEY = "BODY_KEY";
+    private static final String KATO_JSON_NODE_KEY = "_KATO_JSON_NODE_KEY_";
 
     private final ObjectMapper mapper;
 
@@ -51,6 +47,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
 
     @Override
     public boolean supportsParameter(MethodParameter methodParameter) {
+        // 类（katoservice），方法，参数没有passby，
         return methodParameter.hasParameterAnnotation(MultiRequestBody.class);
     }
 
@@ -67,25 +64,16 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
             key = methodParameter.getParameterName();
         }
         // 获取请求body字符串
-        final String body = getBody(nativeWebRequest);
+        final JsonNode rootNode = getJsonNode(nativeWebRequest);
 
-        if (!ObjectUtils.isEmpty(body)) {
-            final JsonNode jsonNode = mapper.readTree(body);
-            // key解析
-            if (jsonNode.has(key)) {
-                // String key
-                final JsonNode node = jsonNode.get(key);
-                result = readValue(methodParameter, node.toString());
-            } else {
-                // 如果没有指定key，则判断是否可以解析整个body
-                if (parameterAnnotation.parseBodyIfMissKey()) {
-                    try {
-                        result = readValue(methodParameter, body);
-                    } catch (Exception e) {
-                        // ignore
-                    }
-                }
+        if (!ObjectUtils.isEmpty(rootNode)) {
+            // 尝试获取field
+            JsonNode node = rootNode.get(key);
+            // 如果json中不存在与参数名称相对应的field,且开启了全body映射
+            if (node == null && parameterAnnotation.parseBodyIfMissKey()) {
+                node = rootNode;
             }
+            result = mapper.treeToValue(node, methodParameter.getParameterType());
         }
 
         // 是否必填验证
@@ -96,30 +84,21 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
         return result;
     }
 
-    private Object readValue(MethodParameter methodParameter, String content) throws IOException {
-        return mapper.readValue(content, new TypeReference<Object>() {
-            @Override
-            public Type getType() {
-                return methodParameter.getGenericParameterType();
-            }
-        });
-    }
-
     /**
      * 多个参数解析时，从attribute中获取数据
      *
      * @param nativeWebRequest
-     * @return
+     * @return JsonNode
      * @throws IOException
      */
-    private String getBody(NativeWebRequest nativeWebRequest) throws IOException {
-        Object attribute = nativeWebRequest.getAttribute(BODY_KEY, WebRequest.SCOPE_REQUEST);
+    private JsonNode getJsonNode(NativeWebRequest nativeWebRequest) throws IOException {
+        Object attribute = nativeWebRequest.getAttribute(KATO_JSON_NODE_KEY, WebRequest.SCOPE_REQUEST);
         if (ObjectUtils.isEmpty(attribute)) {
             HttpServletRequest servletRequest = nativeWebRequest.getNativeRequest(HttpServletRequest.class);
             Assert.state(servletRequest != null, "No HttpServletRequest");
-            attribute = IoUtil.read(servletRequest.getInputStream(), StandardCharsets.UTF_8);
-            nativeWebRequest.setAttribute(BODY_KEY, attribute, WebRequest.SCOPE_REQUEST);
+            attribute = mapper.readTree(servletRequest.getInputStream());
+            nativeWebRequest.setAttribute(KATO_JSON_NODE_KEY, attribute, WebRequest.SCOPE_REQUEST);
         }
-        return (String) attribute;
+        return (JsonNode) attribute;
     }
 }

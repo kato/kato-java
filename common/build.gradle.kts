@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
-    implementation("cn.hutool:hutool-core:5.8.4.M1")
 
     compileOnly("org.springframework.boot:spring-boot-autoconfigure:2.6.7")
     compileOnly("org.springframework:spring-context:5.3.19")

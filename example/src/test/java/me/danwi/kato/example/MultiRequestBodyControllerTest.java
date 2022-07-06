@@ -30,7 +30,6 @@ public class MultiRequestBodyControllerTest {
         assertThat(result.getBody()).isEqualTo(test);
     }
 
-
     @Test
     void testMultiRequestSingle() {
         final int id = 19;
@@ -38,11 +37,17 @@ public class MultiRequestBodyControllerTest {
         assertThat(Objects.requireNonNull(result.getBody()).getId()).isEqualTo(id);
     }
 
-
     @Test
     void testMultiRequestObj() throws JsonProcessingException {
         final TestEntity test = new TestEntity(1234, "tesdfst");
         final ResponseEntity<TestEntity> result = restTemplate.postForEntity("/multiRequestObj", objectMapper.writeValueAsString(test), TestEntity.class);
+        assertThat(result.getBody()).isEqualTo(test);
+    }
+
+    @Test
+    void multiRequestObj2() throws JsonProcessingException {
+        final TestEntity test = new TestEntity(1234, "tesdfst");
+        final ResponseEntity<TestEntity> result = restTemplate.postForEntity("/multiRequestObj2", objectMapper.writeValueAsString(test), TestEntity.class);
         assertThat(result.getBody()).isEqualTo(test);
     }
 }

@@ -24,6 +24,16 @@ class MultiRequestBodyController {
     fun multiRequestObj(@MultiRequestBody obj: TestEntity): TestEntity {
         return obj
     }
+
+    @PostMapping("/multiRequestObj2")
+    fun multiRequestObj2(
+        @MultiRequestBody obj: TestEntity,
+        @MultiRequestBody id: Int,
+        @MultiRequestBody obj2: TestEntity2
+    ): TestEntity {
+        return obj
+    }
 }
 
 data class TestEntity(val id: Int, val name: String?)
+data class TestEntity2(val id: Int, val unkonw: String?)
