@@ -3,6 +3,8 @@ package me.danwi.kato.server.argument;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kotlin.reflect.KType;
+import kotlin.reflect.jvm.ReflectJvmMapping;
 import me.danwi.kato.common.argument.MultiRequestBody;
 import me.danwi.kato.server.PassByKato;
 import org.springframework.core.MethodParameter;
@@ -87,8 +89,15 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
             }
         }
 
+        final KType type = ReflectJvmMapping
+                .getKotlinFunction(methodParameter.getMethod())
+                .getParameters()
+                .get(methodParameter.getParameterIndex() + 1)
+                .getType();
+        final boolean isJavaCode = type.toString().endsWith("!");
+
         // 是否必填验证
-        if (Objects.isNull(result) && paramInfo.required) {
+        if (Objects.isNull(result) && (isJavaCode ? paramInfo.required : !type.isMarkedNullable())) {
             throw new IllegalArgumentException(String.format("缺少 %s 参数", paramInfo.key));
         }
 
