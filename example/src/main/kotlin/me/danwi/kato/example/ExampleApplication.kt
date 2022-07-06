@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController
 
 @SpringBootApplication
 @EnableKatoServer
-@Import(MethodArgumentHandlerConfig::class)
 class ExampleApplication
 
 fun main(args: Array<String>) {
