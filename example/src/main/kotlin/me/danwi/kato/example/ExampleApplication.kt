@@ -1,6 +1,6 @@
 package me.danwi.kato.example
 
-import me.danwi.kato.common.argument.MethodArgumentHandlerConfig
+import me.danwi.kato.server.argument.MethodArgumentHandlerConfig
 import me.danwi.kato.common.exception.ExceptionExtraDataHolder
 import me.danwi.kato.common.exception.KatoCommonException
 import me.danwi.kato.common.exception.KatoException
