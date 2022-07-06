@@ -28,6 +28,34 @@ public class MultiRequestBodyControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    void multiRequestKotlinNullableJava() throws JsonProcessingException {
+        final TestEntity test = new TestEntity(null, "test");
+        final ResponseEntity<TestEntity> result = restTemplate.postForEntity("/multiRequestKotlinNullableJava", objectMapper.writeValueAsString(test), TestEntity.class);
+        assertThat(new TestEntity(null, null)).isEqualTo(result.getBody());
+    }
+
+    @Test
+    void multiRequestKotlinNullableJavaErr() throws JsonProcessingException {
+        final TestEntity test = new TestEntity(null, "test");
+        final ResponseEntity<Map> result = restTemplate.postForEntity("/multiRequestKotlinNullableJavaErr", objectMapper.writeValueAsString(test), Map.class);
+        Assertions.assertTrue(result.getBody().get("message").toString().contains("缺少 id 参数"));
+    }
+
+    @Test
+    void multiRequestKotlinNullableErr() throws JsonProcessingException {
+        final TestEntity test = new TestEntity(null, "test");
+        final ResponseEntity<Map> result = restTemplate.postForEntity("/multiRequestKotlinNullableErr", objectMapper.writeValueAsString(test), Map.class);
+        Assertions.assertTrue(result.getBody().get("message").toString().contains("缺少 id 参数"));
+    }
+
+    @Test
+    void multiRequestKotlinNullable() throws JsonProcessingException {
+        final TestEntity test = new TestEntity(null, "test");
+        final ResponseEntity<TestEntity> result = restTemplate.postForEntity("/multiRequestKotlinNullable", objectMapper.writeValueAsString(test), TestEntity.class);
+        assertThat(test).isEqualTo(result.getBody());
+    }
+
+    @Test
     void testMultiRequestNoJson() throws JsonProcessingException {
         final ResponseEntity<TestEntity> result = restTemplate.postForEntity("/multiRequest", 123, TestEntity.class);
         assertThat(new TestEntity(123, "123")).isEqualTo(result.getBody());

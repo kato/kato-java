@@ -18,7 +18,6 @@ class MultiRequestBodyWithOutAnnoController {
         return TestEntity(id, name)
     }
 
-
     @PostMapping("/multiRequestPassByParam")
     fun multiRequestPassByParam(id: Int?, @PassByKato name: String?): TestEntity {
         return TestEntity(id, name)

@@ -10,6 +10,16 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class MultiRequestBodyController {
 
+    @PostMapping("/multiRequestKotlinNullable")
+    fun multiRequestKotlinNullable(@MultiRequestBody id: Int?, name: String): TestEntity {
+        return TestEntity(id, name)
+    }
+
+    @PostMapping("/multiRequestKotlinNullableErr")
+    fun multiRequestKotlinNullableErr(@MultiRequestBody id: Int, name: String): TestEntity {
+        return TestEntity(id, name)
+    }
+
     @PostMapping("/multiRequest")
     fun multiRequest(@MultiRequestBody id: Int, name: String): TestEntity {
         return TestEntity(id, name)
