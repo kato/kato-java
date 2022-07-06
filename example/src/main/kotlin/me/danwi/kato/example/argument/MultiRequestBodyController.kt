@@ -1,4 +1,4 @@
-package me.danwi.kato.example.controller
+package me.danwi.kato.example.argument
 
 import me.danwi.kato.common.argument.MultiRequestBody
 import org.springframework.web.bind.annotation.PostMapping
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 class MultiRequestBodyController {
 
     @PostMapping("/multiRequest")
-    fun multiRequest(@MultiRequestBody id: Int, @MultiRequestBody(required = false) name: String): TestEntity {
+    fun multiRequest(@MultiRequestBody id: Int, name: String): TestEntity {
         return TestEntity(id, name)
     }
 
@@ -30,10 +30,16 @@ class MultiRequestBodyController {
         @MultiRequestBody obj: TestEntity,
         @MultiRequestBody id: Int,
         @MultiRequestBody obj2: TestEntity2
-    ): TestEntity {
-        return obj
+    ): TestEntity3 {
+        return TestEntity3(id, obj)
+    }
+
+    @PostMapping("/multiRequestObj3")
+    fun multiRequestObj3(
+        @MultiRequestBody obj: TestEntity2,
+        @MultiRequestBody id: Int,
+        @MultiRequestBody obj2: TestEntity3
+    ): TestEntity3 {
+        return obj2
     }
 }
-
-data class TestEntity(val id: Int, val name: String?)
-data class TestEntity2(val id: Int, val unkonw: String?)
