@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
  * 注解在Controller/方法上,其结果不再由kato来处理
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER})
 public @interface PassByKato {
 }

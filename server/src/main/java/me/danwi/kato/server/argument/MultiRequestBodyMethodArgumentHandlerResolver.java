@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.danwi.kato.common.argument.MultiRequestBody;
+import me.danwi.kato.server.PassByKato;
 import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -15,6 +16,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Objects;
 
 /**
@@ -48,8 +50,15 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
 
     @Override
     public boolean supportsParameter(MethodParameter methodParameter) {
-        // TODO 类（katoservice），方法，参数没有passby，
-        return methodParameter.hasParameterAnnotation(MultiRequestBody.class);
+        final Method method = methodParameter.getMethod();
+        if (method == null) {
+            return false;
+        }
+
+        //  TODO 类（katoService）
+        return methodParameter.getDeclaringClass().getAnnotation(PassByKato.class) == null
+                && method.getAnnotation(PassByKato.class) == null
+                && !methodParameter.hasParameterAnnotation(PassByKato.class);
     }
 
     @Override
@@ -57,32 +66,54 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
         // 定义结果
         Object result = null;
 
-        // 获取注解
-        final MultiRequestBody parameterAnnotation = methodParameter.getParameterAnnotation(MultiRequestBody.class);
-        // 获取key
-        String key = parameterAnnotation.value();
-        if (ObjectUtils.isEmpty(key)) {
-            key = methodParameter.getParameterName();
-        }
+        // 获取参数配置信息
+        final ParamInfo paramInfo = getParamInfo(methodParameter);
+
         // 获取请求body字符串
         final JsonNode rootNode = getJsonNode(nativeWebRequest);
 
         if (!ObjectUtils.isEmpty(rootNode)) {
             // 尝试获取field
-            JsonNode node = rootNode.get(key);
+            JsonNode node = rootNode.get(paramInfo.key);
             // 如果json中不存在与参数名称相对应的field,且开启了全body映射
-            if (node == null && parameterAnnotation.parseBodyIfMissKey()) {
-                node = rootNode;
+            if ((node == null || node.isNull()) && paramInfo.parseBodyIfMissKey) {
+                try {
+                    result = mapper.treeToValue(rootNode, methodParameter.getParameterType());
+                } catch (Exception e) {
+                    // 忽略 此时result=null，后续进行是否必填验证
+                }
+            } else {
+                result = mapper.treeToValue(node, methodParameter.getParameterType());
             }
-            result = mapper.treeToValue(node, methodParameter.getParameterType());
         }
 
         // 是否必填验证
-        if (Objects.isNull(result) && parameterAnnotation.required()) {
-            throw new IllegalArgumentException(String.format("required param %s is not present", key));
+        if (Objects.isNull(result) && paramInfo.required) {
+            throw new IllegalArgumentException(String.format("缺少 %s 参数", paramInfo.key));
         }
 
         return result;
+    }
+
+    private ParamInfo getParamInfo(MethodParameter methodParameter) {
+        final ParamInfo paramInfo = new ParamInfo();
+        MultiRequestBody parameterAnnotation = methodParameter.getParameterAnnotation(MultiRequestBody.class);
+        // 获取key
+        if (parameterAnnotation == null) {
+            paramInfo.key = methodParameter.getParameterName();
+        } else {
+            paramInfo.key = parameterAnnotation.value();
+            if (ObjectUtils.isEmpty(paramInfo.key)) {
+                paramInfo.key = methodParameter.getParameterName();
+            }
+            paramInfo.required = parameterAnnotation.required();
+            paramInfo.parseBodyIfMissKey = parameterAnnotation.parseBodyIfMissKey();
+        }
+        // 校验是否获取到 key
+        if (ObjectUtils.isEmpty(paramInfo.key)) {
+            throw new IllegalArgumentException("JVM 版本不支持自动获取参数名，请手动使用 MultiRequestBody 注解指定value作为key");
+        }
+        return paramInfo;
     }
 
     /**
@@ -101,5 +132,11 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
             nativeWebRequest.setAttribute(KATO_JSON_NODE_KEY, attribute, WebRequest.SCOPE_REQUEST);
         }
         return (JsonNode) attribute;
+    }
+
+    private static class ParamInfo {
+        String key = "";
+        boolean required = true;
+        boolean parseBodyIfMissKey = true;
     }
 }
