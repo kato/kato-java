@@ -44,7 +44,7 @@ import java.util.Objects;
  */
 public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMethodArgumentResolver {
 
-    private static final Logger logger = LoggerFactory.getLogger(MultiRequestBodyMethodArgumentHandlerResolver.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultiRequestBodyMethodArgumentHandlerResolver.class);
 
     private static final String KATO_JSON_NODE_KEY = "_KATO_JSON_NODE_KEY_";
 
@@ -104,7 +104,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
         if (Objects.isNull(result) && (isJavaCode ? paramInfo.required : !type.isMarkedNullable())) {
             throw new IllegalArgumentException(String.format("缺少 %s 参数", paramInfo.key));
         }
-        logger.debug("解析参数：key={}，value={}", paramInfo.key, result);
+        LOGGER.debug("解析参数：key={}，value={}", paramInfo.key, result);
         return result;
     }
 
@@ -144,7 +144,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
             attribute = mapper.readTree(servletRequest.getInputStream());
             nativeWebRequest.setAttribute(KATO_JSON_NODE_KEY, attribute, WebRequest.SCOPE_REQUEST);
 
-            logger.debug("解析请求数据 [{}] 为 [{}]", nativeWebRequest.getHeader("accept"), attribute);
+            LOGGER.debug("解析请求数据 [{}] 为 [{}]", nativeWebRequest.getHeader("accept"), attribute);
         }
         return (JsonNode) attribute;
     }
