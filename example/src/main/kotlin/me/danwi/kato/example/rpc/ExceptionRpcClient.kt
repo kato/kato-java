@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping
  * @author wjy
  */
 @KatoClient("test", url = "http://localhost:8888")
-interface RpcClient {
+interface ExceptionRpcClient {
 
     @RequestMapping("/")
     fun index(): TestData
