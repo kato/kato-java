@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 参数处理器自动配置
  */
-@Configuration
+@Configuration("me.danwi.kato.server.argument.MethodArgumentHandlerConfig")
 public class MethodArgumentHandlerConfig implements WebMvcConfigurer {
 
     private final ObjectMapper objectMapper;
