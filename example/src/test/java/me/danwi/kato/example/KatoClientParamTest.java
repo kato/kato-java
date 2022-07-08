@@ -54,5 +54,10 @@ public class KatoClientParamTest {
         }
     }
 
-
+    @Test
+    public void requestParamTest() {
+        TestData test = new TestData("test");
+        TestData index = paramRpcClient.index(test.getName());
+        Assertions.assertEquals(test, index);
+    }
 }

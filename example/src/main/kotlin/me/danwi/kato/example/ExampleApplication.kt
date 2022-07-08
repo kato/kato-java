@@ -8,6 +8,7 @@ import me.danwi.kato.server.EnableKatoServer
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @SpringBootApplication
@@ -26,6 +27,11 @@ class TestController {
     @RequestMapping("/")
     fun index(): TestData {
         return TestData("kato")
+    }
+
+    @RequestMapping("/param")
+    fun index(@RequestParam name: String): TestData {
+        return TestData(name)
     }
 
     @RequestMapping("/common-exception")
