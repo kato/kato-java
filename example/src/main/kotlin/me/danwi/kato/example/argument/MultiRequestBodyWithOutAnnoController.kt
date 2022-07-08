@@ -28,6 +28,11 @@ class MultiRequestBodyWithOutAnnoController {
         return TestEntity(id, name)
     }
 
+    @PostMapping("/multiRequest2")
+    fun multiRequest2(id: Int, name: String): TestEntity {
+        return TestEntity(id, name)
+    }
+
     @PostMapping("/multiRequestSingle")
     fun multiRequestSingle(id: Int): TestEntity {
         return TestEntity(id, null)

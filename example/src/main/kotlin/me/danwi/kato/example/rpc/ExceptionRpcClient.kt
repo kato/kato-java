@@ -13,6 +13,4 @@ interface ExceptionRpcClient {
     @RequestMapping("/common-exception")
     fun commonException()
 
-    @RequestMapping("/exception")
-    fun exception()
 }
