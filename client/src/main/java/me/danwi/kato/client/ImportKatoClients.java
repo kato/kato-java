@@ -1,6 +1,7 @@
 package me.danwi.kato.client;
 
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.ElementType;
@@ -17,4 +18,14 @@ public @interface ImportKatoClients {
 
     @AliasFor(annotation = EnableFeignClients.class)
     Class<?>[] clients() default {};
+
+    @AliasFor(annotation = EnableFeignClients.class)
+    String[] basePackages() default {};
+
+    @AliasFor(annotation = EnableFeignClients.class)
+    Class<?>[] basePackageClasses() default {};
+
+    @AliasFor(annotation = EnableFeignClients.class)
+    Class<?>[] defaultConfiguration() default {};
+
 }
