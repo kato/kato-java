@@ -17,4 +17,14 @@ public @interface ImportKatoClients {
 
     @AliasFor(annotation = EnableFeignClients.class)
     Class<?>[] clients() default {};
+
+    @AliasFor(annotation = EnableFeignClients.class)
+    String[] basePackages() default {};
+
+    @AliasFor(annotation = EnableFeignClients.class)
+    Class<?>[] basePackageClasses() default {};
+
+    @AliasFor(annotation = EnableFeignClients.class)
+    Class<?>[] defaultConfiguration() default {};
+
 }

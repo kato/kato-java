@@ -6,6 +6,8 @@ import me.danwi.kato.common.ExceptionResult;
 import me.danwi.kato.common.exception.ExceptionExtraDataHolder;
 import me.danwi.kato.common.exception.KatoException;
 import me.danwi.kato.common.exception.KatoUndeclaredException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,9 @@ import java.lang.reflect.Method;
 
 @RestControllerAdvice
 public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(KatoResponseBodyAdvice.class);
+
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
@@ -46,6 +51,8 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
             }
             //设置异常状态码
             response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.debug("捕获异常：", (KatoException) body);
+            LOGGER.debug("异常：{} 转换为：{}", body.getClass().getName(), exceptionResult);
             return exceptionResult;
         }
 
