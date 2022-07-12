@@ -36,7 +36,7 @@ allprojects {
     }
 
     group = "me.danwi.kato"
-    version = "0.0.5"
+    version = "0.0.6.1"
     if (ext["development"] == true)
         version = "$version-SNAPSHOT"
 
@@ -100,7 +100,6 @@ allprojects {
                 }
             }
         }
-
         if (localProperties.hasProperty("signing.key"))
             pluginManager.withPlugin("signing") {
                 extensions.configure(SigningExtension::class) {
@@ -113,6 +112,37 @@ allprojects {
                     }
                 }
             }
+        configure<PublishingExtension> {
+            fun getMavenArtifactRepo(
+                url: String, repoName: String = "DEFAULT_REPO_NAME", _username: String = "bjknrt", _password: String = "bjknrt"
+            ): (MavenArtifactRepository).() -> Unit {
+                return {
+                    name = repoName
+                    isAllowInsecureProtocol = true
+                    setUrl(url)
+                    credentials {
+                        username = _username
+                        password = _password
+                    }
+                }
+            }
+            val isSnapshot = version.toString().endsWith("SNAPSHOT")
+            val ciUsername: String = System.getenv("NEXUS_CI_UN") ?: ""
+            val ciPassword: String = System.getenv("NEXUS_CI_PD") ?: ""
+            repositories {
+                maven {
+                    val repoUrl = "http://repo.gate.bjknrt.com/repository/${if (isSnapshot) "maven-snapshot" else "maven-release"}/"
+                    // 读取环境变量的值 ./gradlew publishAllPublicationsToBjknrtRepository
+                    // if (ciUsername != "" && ciPassword != "") {
+                    maven(
+                        getMavenArtifactRepo(
+                            repoUrl, "bjknrt", ciUsername, ciPassword
+                        )
+                    )
+                    // }
+                }
+            }
+        }
     }
 }
 

@@ -1,0 +1,18 @@
+stages:
+  - publish
+
+before_script:
+  - export NEXUS_CI_UN=$NEXUS_CI_UN
+  - export NEXUS_CI_PD=$NEXUS_CI_PD
+  - chmod +x gradlew
+
+snapshot-publish:
+  stage: publish
+  tags:
+    - newbie
+    - pve-200
+  script:
+    - ./gradlew test
+    - ./gradlew publishAllPublicationsToBjknrtRepository
+  only:
+    - bjknrt
