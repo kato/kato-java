@@ -105,10 +105,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
 
         // 是否必填验证
         if (Objects.isNull(result) && (isJavaCode ? paramInfo.required : !type.isMarkedNullable())) {
-            if (temp != null) {
-                throw temp;
-            }
-            throw new IllegalArgumentException(String.format("缺少 %s 参数", paramInfo.key));
+            throw new IllegalArgumentException(String.format("缺少 %s 参数", paramInfo.key), temp);
         }
         LOGGER.debug("解析参数：key={}，value={}", paramInfo.key, result);
         return result;
