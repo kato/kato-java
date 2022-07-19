@@ -71,6 +71,8 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
     public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
         // 定义结果
         Object result = null;
+        // 错误信息暂存
+        Exception temp = null;
 
         // 获取参数配置信息
         final ParamInfo paramInfo = getParamInfo(methodParameter);
@@ -87,6 +89,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
                     result = mapper.treeToValue(rootNode, methodParameter.getParameterType());
                 } catch (Exception e) {
                     // 忽略 此时result=null，后续进行是否必填验证
+                    temp = e;
                 }
             } else {
                 result = mapper.treeToValue(node, methodParameter.getParameterType());
@@ -102,6 +105,9 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
 
         // 是否必填验证
         if (Objects.isNull(result) && (isJavaCode ? paramInfo.required : !type.isMarkedNullable())) {
+            if (temp != null) {
+                throw temp;
+            }
             throw new IllegalArgumentException(String.format("缺少 %s 参数", paramInfo.key));
         }
         LOGGER.debug("解析参数：key={}，value={}", paramInfo.key, result);
