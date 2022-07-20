@@ -1,10 +1,18 @@
+image: openjdk:8-jdk
+
 stages:
   - publish
 
 before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
   - export NEXUS_CI_UN=$NEXUS_CI_UN
   - export NEXUS_CI_PD=$NEXUS_CI_PD
   - chmod +x gradlew
+
+cache:
+  paths:
+    - .gradle/wrapper
+    - .gradle/cache
 
 snapshot-publish:
   stage: publish
