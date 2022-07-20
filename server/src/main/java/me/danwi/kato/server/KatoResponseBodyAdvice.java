@@ -72,11 +72,13 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
     @ExceptionHandler(KatoException.class)
     KatoException katoExceptionHandler(KatoException exception) {
+        LOGGER.debug("katoExceptionHandler 捕获异常", exception);
         return exception;
     }
 
     @ExceptionHandler(Exception.class)
     KatoUndeclaredException katoUndeclaredExceptionHandler(Exception exception) {
+        LOGGER.debug("katoUndeclaredExceptionHandler 捕获异常", exception);
         return new KatoUndeclaredException(exception);
     }
 }
