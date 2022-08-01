@@ -1,5 +1,6 @@
 package me.danwi.kato.server.argument;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +22,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Objects;
 
 /**
@@ -86,13 +88,13 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
             // 如果json中不存在与参数名称相对应的field,且开启了全body映射
             if ((node == null || node.isNull()) && paramInfo.parseBodyIfMissKey) {
                 try {
-                    result = mapper.treeToValue(rootNode, methodParameter.getParameterType());
+                    result = readValue(methodParameter, rootNode);
                 } catch (Exception e) {
                     // 忽略 此时result=null，后续进行是否必填验证
                     temp = e;
                 }
             } else {
-                result = mapper.treeToValue(node, methodParameter.getParameterType());
+                result = readValue(methodParameter, node);
             }
         }
 
@@ -109,6 +111,15 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
         }
         LOGGER.debug("解析参数：key={}，value={}", paramInfo.key, result);
         return result;
+    }
+
+    private Object readValue(MethodParameter methodParameter, JsonNode rootNode) throws IOException {
+        return mapper.readValue(mapper.treeAsTokens(rootNode), new TypeReference<Object>() {
+            @Override
+            public Type getType() {
+                return methodParameter.getGenericParameterType();
+            }
+        });
     }
 
     private ParamInfo getParamInfo(MethodParameter methodParameter) {
