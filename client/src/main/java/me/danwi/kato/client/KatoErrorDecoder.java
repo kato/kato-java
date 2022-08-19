@@ -1,5 +1,6 @@
 package me.danwi.kato.client;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import feign.Util;
@@ -13,7 +14,14 @@ import me.danwi.kato.common.exception.KatoException;
 import org.springframework.http.HttpStatus;
 
 public class KatoErrorDecoder implements ErrorDecoder {
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
+
+    {
+        mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNRESOLVED_OBJECT_IDS, false);
+    }
 
     @Override
     public Exception decode(String methodKey, Response response) {
