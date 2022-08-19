@@ -38,14 +38,14 @@ public class MultiRequestBodyControllerTest {
     void multiRequestKotlinNullableJavaErr() throws JsonProcessingException {
         final TestEntity test = new TestEntity(null, "test");
         final ResponseEntity<Map> result = restTemplate.postForEntity("/multiRequestKotlinNullableJavaErr", objectMapper.writeValueAsString(test), Map.class);
-        Assertions.assertTrue(result.getBody().get("message").toString().contains("缺少 id 参数"));
+        Assertions.assertTrue(result.getBody().get("message").toString().contains("resolve [id] error"));
     }
 
     @Test
     void multiRequestKotlinNullableErr() throws JsonProcessingException {
         final TestEntity test = new TestEntity(null, "test");
         final ResponseEntity<Map> result = restTemplate.postForEntity("/multiRequestKotlinNullableErr", objectMapper.writeValueAsString(test), Map.class);
-        Assertions.assertTrue(result.getBody().get("message").toString().contains("缺少 id 参数"));
+        Assertions.assertTrue(result.getBody().get("message").toString().contains("resolve [id] error"));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class MultiRequestBodyControllerTest {
     void multiRequestObjLessParam() throws JsonProcessingException {
         final TestEntityAll test = new TestEntityAll(null, null, "unknow", null);
         final ResponseEntity<Map> result = restTemplate.postForEntity("/multiRequestObj2", objectMapper.writeValueAsString(test), Map.class);
-        Assertions.assertTrue(result.getBody().get("message").toString().contains("缺少 id 参数"));
+        Assertions.assertTrue(result.getBody().get("message").toString().contains("resolve [id] error"));
     }
 
 
