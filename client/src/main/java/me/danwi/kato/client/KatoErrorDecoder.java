@@ -10,11 +10,13 @@ import me.danwi.kato.client.exception.KatoClientException;
 import me.danwi.kato.common.ExceptionResult;
 import me.danwi.kato.common.exception.ExceptionExtraDataHolder;
 import me.danwi.kato.common.exception.ExceptionIdentify;
+import me.danwi.kato.common.exception.KatoAuthenticationException;
 import me.danwi.kato.common.exception.KatoException;
 import org.springframework.http.HttpStatus;
 
 public class KatoErrorDecoder implements ErrorDecoder {
     private final ObjectMapper mapper;
+    private final Default defaultErrorDecode = new Default();
 
     {
         mapper = new ObjectMapper();
@@ -25,22 +27,32 @@ public class KatoErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-        //默认处理
-        if (response.status() != HttpStatus.INTERNAL_SERVER_ERROR.value()) {
-            return new Default().decode(methodKey, response);
+        // 默认处理
+        if (
+                response.status() != HttpStatus.INTERNAL_SERVER_ERROR.value()
+                        && response.status() != HttpStatus.FORBIDDEN.value()
+                        && response.status() != HttpStatus.UNAUTHORIZED.value()
+        ) {
+            return defaultErrorDecode.decode(methodKey, response);
         }
-        //空body
+
+        // 401 处理（由于401读取不到body内容，特殊处理）
+        if (response.status() == HttpStatus.UNAUTHORIZED.value()) {
+            return new KatoAuthenticationException(methodKey);
+        }
+
+        // 空body
         if (response.body() == null)
             throw new DecodeException(response.status(), "无法获取异常的详细信息", response.request());
 
-        //500状态为kato特定异常状态
+        // kato特定异常状态 500,403
         try {
             //读取数据
             String bodyStr = Util.toString(response.body().asReader(Util.UTF_8));
             //反序列化ErrorResult结果
             ExceptionResult exceptionResult = mapper.readValue(bodyStr, ExceptionResult.class);
             //尝试构造异常
-            Exception exception = constructException(exceptionResult);
+            Exception exception = constructException(methodKey, exceptionResult);
             if (exception == null) {
                 //如果构造失败,则使用kato异常包裹
                 return new KatoException(exceptionResult.getMessage());
@@ -58,7 +70,7 @@ public class KatoErrorDecoder implements ErrorDecoder {
     }
 
     //尝试反序列化并构造异常
-    private Exception constructException(ExceptionResult result) {
+    private Exception constructException(String methodKey, ExceptionResult result) {
         try {
             //加载异常类
             Class<?> exceptionClass = Class.forName(result.getId());
@@ -68,7 +80,7 @@ public class KatoErrorDecoder implements ErrorDecoder {
                 Exception exceptionInstance = null;
                 //以message构造
                 try {
-                    exceptionInstance = (Exception) exceptionClass.getConstructor(String.class).newInstance(result.getMessage());
+                    exceptionInstance = (Exception) exceptionClass.getConstructor(String.class).newInstance(String.format("%s [%s]", result.getMessage(), methodKey));
                 } catch (Exception ignored) {
                 }
                 //以无参构造

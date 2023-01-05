@@ -13,4 +13,16 @@ interface ExceptionRpcClient {
     @RequestMapping("/common-exception")
     fun commonException()
 
+
+    @RequestMapping("/katoAuth")
+    fun katoAuth()
+
+    @RequestMapping("/katoAccessDenied")
+    fun katoAccessDenied()
+
+    @RequestMapping("/springAuth")
+    fun springAuth()
+
+    @RequestMapping("/springAccessDenied")
+    fun springAccessDenied()
 }
