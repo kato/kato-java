@@ -3,9 +3,7 @@ package me.danwi.kato.server;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.danwi.kato.common.ExceptionResult;
-import me.danwi.kato.common.exception.ExceptionExtraDataHolder;
-import me.danwi.kato.common.exception.KatoException;
-import me.danwi.kato.common.exception.KatoUndeclaredException;
+import me.danwi.kato.common.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
@@ -51,8 +49,16 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
             }
             //设置异常状态码
             response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-            LOGGER.debug("捕获异常：", (KatoException) body);
             LOGGER.debug("异常：{} 转换为：{}", body.getClass().getName(), exceptionResult);
+
+            // 如果是授权相关，则修改状态码
+            if (body instanceof KatoAuthenticationException) {
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            }
+            if (body instanceof KatoAccessDeniedException) {
+                response.setStatusCode(HttpStatus.FORBIDDEN);
+            }
+
             return exceptionResult;
         }
 
