@@ -14,6 +14,10 @@ import me.danwi.kato.common.exception.KatoAuthenticationException;
 import me.danwi.kato.common.exception.KatoException;
 import org.springframework.http.HttpStatus;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class KatoErrorDecoder implements ErrorDecoder {
     private final ObjectMapper mapper;
     private final Default defaultErrorDecode = new Default();
@@ -80,7 +84,7 @@ public class KatoErrorDecoder implements ErrorDecoder {
                 Exception exceptionInstance = null;
                 //以message构造
                 try {
-                    exceptionInstance = (Exception) exceptionClass.getConstructor(String.class).newInstance(String.format("%s [%s]", result.getMessage(), methodKey));
+                    exceptionInstance = (Exception) exceptionClass.getConstructor(String.class).newInstance(result.getMessage());
                 } catch (Exception ignored) {
                 }
                 //以无参构造
@@ -97,6 +101,11 @@ public class KatoErrorDecoder implements ErrorDecoder {
                     //加载附带的数据
                     ((ExceptionExtraDataHolder) exceptionInstance).loadFromMap(result.getData());
                 }
+                // 补充堆栈
+                final Class<? extends KatoErrorDecoder> thisClass = this.getClass();
+                final List<StackTraceElement> stackTraceElements = Arrays.stream(exceptionInstance.getStackTrace()).collect(Collectors.toList());
+                stackTraceElements.add(0, new StackTraceElement(thisClass.getName(), methodKey, thisClass.getSimpleName(), 0));
+                exceptionInstance.setStackTrace(stackTraceElements.toArray(new StackTraceElement[0]));
                 //返回异常
                 return exceptionInstance;
             }
