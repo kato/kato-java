@@ -2,10 +2,10 @@ import io.github.gradlenexus.publishplugin.NexusPublishExtension
 import org.jetbrains.kotlin.konan.properties.hasProperty
 
 plugins {
-    id("org.springframework.boot") version "2.6.7" apply false
-    id("io.spring.dependency-management") version "1.0.11.RELEASE" apply false
-    kotlin("jvm") version "1.6.21" apply false
-    kotlin("plugin.spring") version "1.6.21" apply false
+    id("org.springframework.boot") version "3.0.3" apply false
+    id("io.spring.dependency-management") version "1.1.0" apply false
+    kotlin("jvm") version "1.7.22" apply false
+    kotlin("plugin.spring") version "1.7.22" apply false
 
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
@@ -24,6 +24,9 @@ if (globalLocalFile.isFile)
 globalProperties.forEach { key, value ->
     ext.set(key as String, value)
 }
+val jvmVersion = "17"
+val springBootVer = "3.0.3"
+val springCloudVersion = "2022.0.1"
 
 allprojects {
     //属性文件
@@ -40,13 +43,9 @@ allprojects {
     if (ext["development"] == true)
         version = "$version-SNAPSHOT"
 
-    repositories {
-        mavenCentral()
-    }
-
     tasks.withType<JavaCompile> {
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
+        sourceCompatibility = jvmVersion
+        targetCompatibility = jvmVersion
         options.encoding = "UTF-8"
     }
 
@@ -55,11 +54,19 @@ allprojects {
     }
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = jvmVersion
     }
 
     tasks.withType<Test> {
         useJUnitPlatform()
+    }
+
+    apply<io.spring.gradle.dependencymanagement.DependencyManagementPlugin>()
+    configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
+        imports {
+            mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVer}")
+            mavenBom("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+        }
     }
 
     pluginManager.withPlugin("java") {
@@ -69,10 +76,16 @@ allprojects {
         }
     }
 
+    val isSnapshot = version.toString().endsWith("SNAPSHOT")
+    val isLanCiServer = (System.getenv("CI_RUNNER_TAGS") ?: "").contains("LAN")
+    val ciUsername = System.getenv(extra["CI_UN_ENV_KEY"].toString()) ?: "bjknrt@ci"
+    val ciPassword = System.getenv(extra["CI_PD_ENV_KEY"].toString()) ?: "bjknrt@!234"
+
     pluginManager.withPlugin("maven-publish") {
         extensions.configure(PublishingExtension::class) {
             publications {
                 create<MavenPublication>("Java") {
+                    repositories { mavenCentral() }
                     from(components["java"])
                     pom {
                         name.set(project.name)
@@ -113,35 +126,42 @@ allprojects {
                 }
             }
         configure<PublishingExtension> {
-            fun getMavenArtifactRepo(
-                url: String, repoName: String = "DEFAULT_REPO_NAME", _username: String = "bjknrt", _password: String = "bjknrt"
-            ): (MavenArtifactRepository).() -> Unit {
-                return {
-                    name = repoName
-                    isAllowInsecureProtocol = true
-                    setUrl(url)
-                    credentials {
-                        username = _username
-                        password = _password
-                    }
-                }
-            }
-            val isSnapshot = version.toString().endsWith("SNAPSHOT")
-            val ciUsername: String = System.getenv("NEXUS_CI_UN") ?: ""
-            val ciPassword: String = System.getenv("NEXUS_CI_PD") ?: ""
             repositories {
                 maven {
                     val repoUrl = "http://repo.gate.bjknrt.com/repository/${if (isSnapshot) "maven-snapshot" else "maven-release"}/"
                     // 读取环境变量的值 ./gradlew publishAllPublicationsToBjknrtRepository
-                    // if (ciUsername != "" && ciPassword != "") {
                     maven(
                         getMavenArtifactRepo(
                             repoUrl, "bjknrt", ciUsername, ciPassword
                         )
                     )
-                    // }
                 }
             }
+        }
+    }
+
+    repositories {
+        val url = if (isLanCiServer) {
+            "http://192.168.3.201:8081/repository/maven-public/"
+        } else {
+            "https://repo.gate.bjknrt.com/repository/maven-public/"
+        }
+        maven(getMavenArtifactRepo(url))
+    }
+}
+fun getMavenArtifactRepo(
+    url: String,
+    repoName: String = "DEFAULT_REPO_NAME",
+    _username: String = "bjknrt",
+    _password: String = "bjknrt"
+): (MavenArtifactRepository).() -> Unit {
+    return {
+        name = repoName
+        isAllowInsecureProtocol = true
+        setUrl(url)
+        credentials {
+            username = _username
+            password = _password
         }
     }
 }
