@@ -85,7 +85,19 @@ allprojects {
         extensions.configure(PublishingExtension::class) {
             publications {
                 create<MavenPublication>("Java") {
-                    repositories { mavenCentral() }
+                    repositories {
+                        mavenCentral()
+                        maven {
+                            maven(
+                                getMavenArtifactRepo(
+                                    "http://repo.gate.bjknrt.com/repository/${if (isSnapshot) "maven-snapshot" else "maven-release"}/",
+                                    "bjknrt",
+                                    ciUsername,
+                                    ciPassword
+                                )
+                            )
+                        }
+                    }
                     from(components["java"])
                     pom {
                         name.set(project.name)
@@ -110,6 +122,14 @@ allprojects {
                             }
                         }
                     }
+                    versionMapping {
+                        usage("java-api") {
+                            fromResolutionOf("runtimeClasspath")
+                        }
+                        usage("java-runtime") {
+                            fromResolutionResult()
+                        }
+                    }
                 }
             }
         }
@@ -125,19 +145,6 @@ allprojects {
                     }
                 }
             }
-        configure<PublishingExtension> {
-            repositories {
-                maven {
-                    val repoUrl = "http://repo.gate.bjknrt.com/repository/${if (isSnapshot) "maven-snapshot" else "maven-release"}/"
-                    // 读取环境变量的值 ./gradlew publishAllPublicationsToBjknrtRepository
-                    maven(
-                        getMavenArtifactRepo(
-                            repoUrl, "bjknrt", ciUsername, ciPassword
-                        )
-                    )
-                }
-            }
-        }
     }
 
     repositories {
