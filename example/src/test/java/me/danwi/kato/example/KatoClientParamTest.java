@@ -1,7 +1,8 @@
 package me.danwi.kato.example;
 
 import feign.FeignException;
-import me.danwi.kato.common.exception.KatoCommonException;
+import jakarta.validation.ConstraintViolationException;
+import me.danwi.kato.common.exception.KatoBusinessException;
 import me.danwi.kato.example.argument.TestEntity;
 import me.danwi.kato.example.rpc.ExceptionRpcClient;
 import me.danwi.kato.example.rpc.NoUseKatoClient;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Map;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class KatoClientParamTest {
@@ -25,8 +28,17 @@ public class KatoClientParamTest {
     @Test
     public void test1() {
         final TestEntity entity = new TestEntity(1, "name");
-        final TestEntity entity2 = paramRpcClient.multiRequest(entity.getId(), entity.getName());
-        Assertions.assertEquals(entity, entity2);
+        Assertions.assertThrowsExactly(ConstraintViolationException.class, () -> paramRpcClient.multiRequest(entity.getId(), entity.getName()));
+        final TestEntity entity2 = entity.copy(2, "ss");
+        Assertions.assertEquals(entity2, paramRpcClient.multiRequest(entity2.getId(), entity2.getName()));
+    }
+
+    @Test
+    public void multiRequestWhitAnno() {
+        final TestEntity entity = new TestEntity(1, "name");
+        Assertions.assertThrowsExactly(ConstraintViolationException.class, () -> paramRpcClient.multiRequestWhitAnno(entity.getId(), entity.getName()));
+        final TestEntity entity2 = entity.copy(2, "ss");
+        Assertions.assertEquals(entity2, paramRpcClient.multiRequestWhitAnno(entity2.getId(), entity2.getName()));
     }
 
     @Test
@@ -38,26 +50,18 @@ public class KatoClientParamTest {
 
     @Test
     public void useKatoClientTest() {
-        try {
-            exceptionRpcClient.commonException();
-        } catch (Exception e) {
-            Assertions.assertTrue(e instanceof KatoCommonException);
-        }
+        Assertions.assertThrowsExactly(KatoBusinessException.class, () -> exceptionRpcClient.katoBusinessException());
     }
 
     @Test
     public void noUseKatoClientTest() {
-        try {
-            noUseKatoClient.exception();
-        } catch (Exception e) {
-            Assertions.assertTrue(e instanceof FeignException);
-        }
+        Assertions.assertThrowsExactly(FeignException.InternalServerError.class, () -> noUseKatoClient.exception());
     }
 
     @Test
     public void requestParamTest() {
-        TestData test = new TestData("test");
-        TestData index = paramRpcClient.index(test.getName());
-        Assertions.assertEquals(test, index);
+        Map<String, Object> index = paramRpcClient.index("test", 10);
+        Assertions.assertEquals("test", index.get("name"));
+        Assertions.assertEquals(10, index.get("age"));
     }
 }

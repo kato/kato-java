@@ -3,4 +3,5 @@ server:
 
 logging:
   level:
+    web: debug
     me.danwi: debug

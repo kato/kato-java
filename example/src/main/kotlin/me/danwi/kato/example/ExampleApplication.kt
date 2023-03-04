@@ -2,7 +2,7 @@ package me.danwi.kato.example
 
 import me.danwi.kato.client.ImportKatoClients
 import me.danwi.kato.common.exception.ExceptionExtraDataHolder
-import me.danwi.kato.common.exception.KatoCommonException
+import me.danwi.kato.common.exception.KatoBusinessException
 import me.danwi.kato.common.exception.KatoException
 import me.danwi.kato.server.EnableKatoServer
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -10,6 +10,7 @@ import org.springframework.boot.runApplication
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 @SpringBootApplication
 @ImportKatoClients
@@ -30,13 +31,13 @@ class TestController {
     }
 
     @RequestMapping("/param")
-    fun index(@RequestParam name: String): TestData {
-        return TestData(name)
+    fun index(@RequestParam name: String, age: Int): Map<String, Any> {
+        return mapOf("name" to name, "age" to age);
     }
 
-    @RequestMapping("/common-exception")
-    fun commonException() {
-        throw KatoCommonException("通用异常")
+    @RequestMapping("/katoBusinessException")
+    fun katoBusinessException() {
+        throw KatoBusinessException()
     }
 
     @RequestMapping("/exception")

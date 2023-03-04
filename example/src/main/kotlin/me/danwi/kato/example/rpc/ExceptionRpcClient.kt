@@ -10,8 +10,8 @@ interface ExceptionRpcClient {
     @RequestMapping("/")
     fun index(): TestData
 
-    @RequestMapping("/common-exception")
-    fun commonException()
+    @RequestMapping("/katoBusinessException")
+    fun katoBusinessException()
 
 
     @RequestMapping("/katoAuth")

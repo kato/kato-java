@@ -2,7 +2,7 @@ package me.danwi.kato.example;
 
 import me.danwi.kato.common.exception.KatoAccessDeniedException;
 import me.danwi.kato.common.exception.KatoAuthenticationException;
-import me.danwi.kato.common.exception.KatoCommonException;
+import me.danwi.kato.common.exception.KatoBusinessException;
 import me.danwi.kato.example.rpc.ExceptionRpcClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -22,48 +22,28 @@ public class KatoClientExceptionTest {
 
     @Test
     public void test2() {
-        try {
-            exceptionRpcClient.commonException();
-        } catch (Exception e) {
-            Assertions.assertTrue(e instanceof KatoCommonException);
-        }
+        Assertions.assertThrowsExactly(KatoBusinessException.class, () -> exceptionRpcClient.katoBusinessException());
     }
 
     @Test
     public void testKatoAuth() {
-        try {
-            exceptionRpcClient.katoAuth();
-        } catch (Exception e) {
-            Assertions.assertTrue(e instanceof KatoAuthenticationException);
-        }
+        Assertions.assertThrowsExactly(KatoAuthenticationException.class, () -> exceptionRpcClient.katoAuth());
     }
 
     @Test
     public void testKatoAccessDenied() {
-        try {
-            exceptionRpcClient.katoAccessDenied();
-        } catch (Exception e) {
-            Assertions.assertTrue(e instanceof KatoAccessDeniedException);
-        }
+        Assertions.assertThrowsExactly(KatoAccessDeniedException.class, () -> exceptionRpcClient.katoAccessDenied());
     }
 
 
     @Test
     public void testSpringAuth() {
-        try {
-            exceptionRpcClient.springAuth();
-        } catch (Exception e) {
-            Assertions.assertTrue(e instanceof KatoAuthenticationException);
-        }
+        Assertions.assertThrowsExactly(KatoAuthenticationException.class, () -> exceptionRpcClient.springAuth());
     }
 
     @Test
     public void testSpringAccessDenied() {
-        try {
-            exceptionRpcClient.springAccessDenied();
-        } catch (Exception e) {
-            Assertions.assertTrue(e instanceof KatoAccessDeniedException);
-        }
+        Assertions.assertThrowsExactly(KatoAccessDeniedException.class, () -> exceptionRpcClient.springAccessDenied());
     }
 
 }

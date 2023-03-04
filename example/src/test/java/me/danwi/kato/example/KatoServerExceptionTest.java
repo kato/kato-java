@@ -46,7 +46,7 @@ public class KatoServerExceptionTest {
         perform.andExpect(MockMvcResultMatchers.status().isUnauthorized())
                 .andExpect(MockMvcResultMatchers.content().string(StringContains.containsStringIgnoringCase(exceptionName)));
         final ExceptionResult exceptionResult = objectMapper.readValue(perform.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), ExceptionResult.class);
-        Assertions.assertTrue(exceptionResult.getId().contains(exceptionName));
+        Assertions.assertTrue(exceptionResult.getException().contains(exceptionName));
     }
 
     @Test
@@ -57,7 +57,7 @@ public class KatoServerExceptionTest {
         perform.andExpect(MockMvcResultMatchers.status().isForbidden())
                 .andExpect(MockMvcResultMatchers.content().string(StringContains.containsStringIgnoringCase(exceptionName)));
         final ExceptionResult exceptionResult = objectMapper.readValue(perform.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), ExceptionResult.class);
-        Assertions.assertTrue(exceptionResult.getId().contains(exceptionName));
+        Assertions.assertTrue(exceptionResult.getException().contains(exceptionName));
     }
 
 
@@ -69,7 +69,7 @@ public class KatoServerExceptionTest {
         perform.andExpect(MockMvcResultMatchers.status().isUnauthorized())
                 .andExpect(MockMvcResultMatchers.content().string(StringContains.containsStringIgnoringCase(exceptionName)));
         final ExceptionResult exceptionResult = objectMapper.readValue(perform.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), ExceptionResult.class);
-        Assertions.assertTrue(exceptionResult.getId().contains(exceptionName));
+        Assertions.assertTrue(exceptionResult.getException().contains(exceptionName));
     }
 
     @Test
@@ -80,7 +80,7 @@ public class KatoServerExceptionTest {
         perform.andExpect(MockMvcResultMatchers.status().isForbidden())
                 .andExpect(MockMvcResultMatchers.content().string(StringContains.containsStringIgnoringCase(exceptionName)));
         final ExceptionResult exceptionResult = objectMapper.readValue(perform.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), ExceptionResult.class);
-        Assertions.assertTrue(exceptionResult.getId().contains(exceptionName));
+        Assertions.assertTrue(exceptionResult.getException().contains(exceptionName));
     }
 
 }
