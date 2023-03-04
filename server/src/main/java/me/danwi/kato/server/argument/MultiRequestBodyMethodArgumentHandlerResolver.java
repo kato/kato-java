@@ -4,10 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import kotlin.reflect.KFunction;
 import kotlin.reflect.KType;
 import kotlin.reflect.jvm.ReflectJvmMapping;
 import me.danwi.kato.common.argument.MultiRequestBody;
+import me.danwi.kato.common.exception.KatoBadRequestException;
 import me.danwi.kato.server.PassByKato;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
@@ -19,7 +23,6 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -70,7 +73,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
     }
 
     @Override
-    public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
+    public Object resolveArgument(@NotNull MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, @NotNull NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) {
         // 定义结果
         Object result = null;
         // 错误信息暂存
@@ -79,42 +82,53 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
         // 获取参数配置信息
         final ParamInfo paramInfo = getParamInfo(methodParameter);
 
-        // 获取请求body字符串
-        final JsonNode rootNode = getJsonNode(nativeWebRequest);
+        try {
+            // 获取请求body字符串
+            final JsonNode rootNode = getJsonNode(nativeWebRequest);
 
-        if (!ObjectUtils.isEmpty(rootNode)) {
-            // 尝试获取field
-            JsonNode node = rootNode.get(paramInfo.key);
-            // 如果json中不存在与参数名称相对应的field,且开启了全body映射
-            if ((node == null || node.isNull()) && paramInfo.parseBodyIfMissKey) {
-                try {
-                    result = readValue(methodParameter, rootNode);
-                } catch (Exception e) {
-                    // 忽略 此时result=null，后续进行是否必填验证
-                    temp = e;
+            if (!ObjectUtils.isEmpty(rootNode)) {
+                // 尝试获取field
+                JsonNode node = rootNode.get(paramInfo.key);
+                // 如果json中不存在与参数名称相对应的field,且开启了全body映射
+                if ((node == null || node.isNull()) && paramInfo.parseBodyIfMissKey) {
+                    try {
+                        result = readValue(methodParameter, rootNode);
+                    } catch (Exception e) {
+                        // 忽略 此时result=null，后续进行是否必填验证
+                        temp = e;
+                    }
+                } else {
+                    result = readValue(methodParameter, node);
                 }
-            } else {
-                result = readValue(methodParameter, node);
+            }
+        } catch (Exception e) {
+            throw new KatoBadRequestException(e.getMessage(), e);
+        }
+
+        boolean isJavaCode = true;
+        KType type = null;
+        final Method method = methodParameter.getMethod();
+        if (method != null) {
+            final KFunction<?> kotlinFunction = ReflectJvmMapping.getKotlinFunction(method);
+            if (kotlinFunction != null) {
+                type = kotlinFunction
+                        .getParameters()
+                        .get(methodParameter.getParameterIndex() + 1)
+                        .getType();
+                isJavaCode = type.toString().endsWith("!");
             }
         }
 
-        final KType type = ReflectJvmMapping
-                .getKotlinFunction(methodParameter.getMethod())
-                .getParameters()
-                .get(methodParameter.getParameterIndex() + 1)
-                .getType();
-        final boolean isJavaCode = type.toString().endsWith("!");
-
         // 是否必填验证
         if (Objects.isNull(result) && (isJavaCode ? paramInfo.required : !type.isMarkedNullable())) {
-            throw new IllegalArgumentException(String.format("resolve [%s] error: %s", paramInfo.key, temp != null ? temp.getMessage() : "need key"), temp);
+            throw new KatoBadRequestException(String.format("resolve [%s] error: %s", paramInfo.key, temp != null ? temp.getMessage() : "need key"), temp);
         }
         LOGGER.debug("解析参数：key={}，value={}", paramInfo.key, result);
         return result;
     }
 
     private Object readValue(MethodParameter methodParameter, JsonNode rootNode) throws IOException {
-        return mapper.readValue(mapper.treeAsTokens(rootNode), new TypeReference<Object>() {
+        return mapper.readValue(mapper.treeAsTokens(rootNode), new TypeReference<>() {
             @Override
             public Type getType() {
                 return methodParameter.getGenericParameterType();
@@ -138,7 +152,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
         }
         // 校验是否获取到 key
         if (ObjectUtils.isEmpty(paramInfo.key)) {
-            throw new IllegalArgumentException("JVM 版本不支持自动获取参数名，请手动使用 MultiRequestBody 注解指定value作为key");
+            throw new IllegalStateException("JVM 版本不支持自动获取参数名，请手动使用 MultiRequestBody 注解指定value作为key");
         }
         return paramInfo;
     }
