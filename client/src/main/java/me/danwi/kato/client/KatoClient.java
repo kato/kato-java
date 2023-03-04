@@ -10,8 +10,9 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@FeignClient(configuration = KatoClientConfig.class)
+@FeignClient
 public @interface KatoClient {
+
     @AliasFor(annotation = FeignClient.class)
     String value() default "";
 
@@ -28,7 +29,10 @@ public @interface KatoClient {
     String url() default "";
 
     @AliasFor(annotation = FeignClient.class)
-    boolean decode404() default false;
+    boolean dismiss404() default false;
+
+    @AliasFor(annotation = FeignClient.class)
+    Class<?>[] configuration() default {KatoClientConfig.class};
 
     @AliasFor(annotation = FeignClient.class)
     Class<?> fallback() default void.class;

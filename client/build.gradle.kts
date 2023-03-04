@@ -7,8 +7,8 @@ plugins {
 dependencies {
     implementation(project(":common"))
 
-    compileOnly("org.springframework:spring-web:5.3.19")
-    compileOnly("io.github.openfeign:feign-core:11.8")
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
-    compileOnly("org.springframework.cloud:spring-cloud-openfeign-core:3.1.2")
+    compileOnly("org.springframework:spring-web")
+    compileOnly("io.github.openfeign:feign-core")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind")
+    compileOnly("org.springframework.cloud:spring-cloud-openfeign-core")
 }

@@ -7,7 +7,6 @@ import feign.form.MultipartFormContentProcessor;
 import feign.form.spring.SpringFormEncoder;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.AnnotatedParameterProcessor;
 import org.springframework.cloud.openfeign.FeignClientProperties;
@@ -26,17 +25,20 @@ import static feign.form.ContentType.MULTIPART;
 
 public class KatoClientConfig {
 
-    @Autowired
-    private ObjectFactory<HttpMessageConverters> messageConverters;
-    @Autowired(required = false)
-    private FeignEncoderProperties encoderProperties;
+    private final ObjectFactory<HttpMessageConverters> messageConverters;
+    private final FeignEncoderProperties encoderProperties;
 
-    @Bean("me.danwi.kato.client.ErrorDecoder")
-    ErrorDecoder errorDecoder() {
+    public KatoClientConfig(ObjectFactory<HttpMessageConverters> messageConverters, FeignEncoderProperties encoderProperties) {
+        this.messageConverters = messageConverters;
+        this.encoderProperties = encoderProperties;
+    }
+
+    @Bean("me.danwi.kato.client.default.katoErrorDecoder")
+    ErrorDecoder katoErrorDecoder() {
         return new KatoErrorDecoder();
     }
 
-    @Bean
+    @Bean("me.danwi.kato.client.default.katoEncoder")
     public Encoder katoEncoder(
             ObjectProvider<AbstractFormWriter> formWriterProvider,
             ObjectProvider<HttpMessageConverterCustomizer> customizer
@@ -44,7 +46,7 @@ public class KatoClientConfig {
         return new KatoEncoder(springEncoder(formWriterProvider, encoderProperties, customizer));
     }
 
-    @Bean
+    @Bean("me.danwi.kato.client.default.katoContract")
     public Contract katoContract(ObjectProvider<List<AnnotatedParameterProcessor>> parameterProcessors, ObjectProvider<FeignClientProperties> feignClientProperties, ConversionService feignConversionService) {
         AtomicBoolean decodeSlash = new AtomicBoolean(true);
         feignClientProperties.ifAvailable(fc -> decodeSlash.set(fc.isDecodeSlash()));
@@ -56,7 +58,7 @@ public class KatoClientConfig {
     }
 
     private Encoder springEncoder(ObjectProvider<AbstractFormWriter> formWriterProvider,
-                                  FeignEncoderProperties encoderProperties, ObjectProvider<HttpMessageConverterCustomizer> customizers) {
+            FeignEncoderProperties encoderProperties, ObjectProvider<HttpMessageConverterCustomizer> customizers) {
         AbstractFormWriter formWriter = formWriterProvider.getIfAvailable();
 
         if (formWriter != null) {
@@ -71,7 +73,6 @@ public class KatoClientConfig {
 
         SpringPojoFormEncoder(AbstractFormWriter formWriter) {
             super();
-
             MultipartFormContentProcessor processor = (MultipartFormContentProcessor) getContentProcessor(MULTIPART);
             processor.addFirstWriter(formWriter);
         }

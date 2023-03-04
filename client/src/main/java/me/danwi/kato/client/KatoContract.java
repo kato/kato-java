@@ -75,12 +75,12 @@ public class KatoContract extends AlwaysEncodeBodyContract implements ResourceLo
     }
 
     public KatoContract(List<AnnotatedParameterProcessor> annotatedParameterProcessors,
-                        ConversionService conversionService) {
+            ConversionService conversionService) {
         this(annotatedParameterProcessors, conversionService, true);
     }
 
     public KatoContract(List<AnnotatedParameterProcessor> annotatedParameterProcessors,
-                        ConversionService conversionService, boolean decodeSlash) {
+            ConversionService conversionService, boolean decodeSlash) {
         Assert.notNull(annotatedParameterProcessors, "Parameter processors can not be null.");
         Assert.notNull(conversionService, "ConversionService can not be null.");
 
@@ -242,13 +242,11 @@ public class KatoContract extends AlwaysEncodeBodyContract implements ResourceLo
 
     private void parseHeaders(MethodMetadata md, Method method, RequestMapping annotation) {
         // TODO: only supports one header value per key
-        if (annotation.headers() != null && annotation.headers().length > 0) {
-            for (String header : annotation.headers()) {
-                int index = header.indexOf('=');
-                if (!header.contains("!=") && index >= 0) {
-                    md.template().header(resolve(header.substring(0, index)),
-                            resolve(header.substring(index + 1).trim()));
-                }
+        for (String header : annotation.headers()) {
+            int index = header.indexOf('=');
+            if (!header.contains("!=") && index >= 0) {
+                md.template().header(resolve(header.substring(0, index)),
+                        resolve(header.substring(index + 1).trim()));
             }
         }
     }
@@ -285,7 +283,7 @@ public class KatoContract extends AlwaysEncodeBodyContract implements ResourceLo
 
     private Annotation synthesizeWithMethodParameterNameAsFallbackValue(Annotation parameterAnnotation, Method
             method,
-                                                                        int parameterIndex) {
+            int parameterIndex) {
         Map<String, Object> annotationAttributes = AnnotationUtils.getAnnotationAttributes(parameterAnnotation);
         Object defaultValue = AnnotationUtils.getDefaultValue(parameterAnnotation);
         if (defaultValue instanceof String && defaultValue.equals(annotationAttributes.get(AnnotationUtils.VALUE))) {
