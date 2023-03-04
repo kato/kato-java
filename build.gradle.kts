@@ -39,7 +39,7 @@ allprojects {
     }
 
     group = "me.danwi.kato"
-    version = "0.0.7"
+    version = "0.1.0."
     if (ext["development"] == true)
         version = "$version-SNAPSHOT"
 
