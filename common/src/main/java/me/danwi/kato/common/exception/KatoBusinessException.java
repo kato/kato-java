@@ -28,7 +28,6 @@ public class KatoBusinessException extends KatoException {
 
     @Override
     public HttpStatus getHttpStatus() {
-        // TODO HttpStatus.SERVER_ERROR
-        return HttpStatus.OK;
+        return HttpStatus.INTERNAL_SERVER_ERROR;
     }
 }
