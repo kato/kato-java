@@ -15,4 +15,5 @@ public class KatoUndeclaredException extends KatoException {
     public KatoUndeclaredException(Throwable cause) {
         super(cause);
     }
+
 }

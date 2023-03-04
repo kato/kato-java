@@ -1,9 +1,11 @@
 package me.danwi.kato.common.exception;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * 权限不足
  */
-public class KatoAccessDeniedException extends KatoCommonException {
+public class KatoAccessDeniedException extends KatoException {
     public KatoAccessDeniedException() {
         this("权限不足");
     }
@@ -20,4 +22,8 @@ public class KatoAccessDeniedException extends KatoCommonException {
         super(cause);
     }
 
+    @Override
+    public HttpStatus getHttpStatus() {
+        return HttpStatus.FORBIDDEN;
+    }
 }

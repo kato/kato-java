@@ -1,9 +1,11 @@
 package me.danwi.kato.common.exception;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * 认证异常
  */
-public class KatoAuthenticationException extends KatoCommonException {
+public class KatoAuthenticationException extends KatoException  {
     public KatoAuthenticationException() {
         this("认证错误");
     }
@@ -18,5 +20,10 @@ public class KatoAuthenticationException extends KatoCommonException {
 
     public KatoAuthenticationException(Throwable cause) {
         super(cause);
+    }
+
+    @Override
+    public HttpStatus getHttpStatus() {
+        return HttpStatus.UNAUTHORIZED;
     }
 }
