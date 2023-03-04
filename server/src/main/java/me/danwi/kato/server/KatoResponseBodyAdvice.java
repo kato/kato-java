@@ -49,7 +49,7 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
         //如果是一个异常
         if (body instanceof KatoException) {
-            ExceptionResult exceptionResult = ExceptionResult.fromThrowable((Throwable) body);
+            ExceptionResult exceptionResult = ExceptionResult.fromException((Throwable) body);
             exceptionResult.setPath(request.getURI().getPath());
 
             //如果有附加数据,则需要填充附加数据
