@@ -78,8 +78,8 @@ allprojects {
 
     val isSnapshot = version.toString().endsWith("SNAPSHOT")
     val isLanCiServer = (System.getenv("CI_RUNNER_TAGS") ?: "").contains("LAN")
-    val ciUsername = System.getenv(extra["CI_UN_ENV_KEY"].toString()) ?: "bjknrt@ci"
-    val ciPassword = System.getenv(extra["CI_PD_ENV_KEY"].toString()) ?: "bjknrt@!234"
+    val ciUsername = System.getenv(extra["CI_UN_ENV_KEY"].toString()) ?: ""
+    val ciPassword = System.getenv(extra["CI_PD_ENV_KEY"].toString()) ?: ""
 
     pluginManager.withPlugin("maven-publish") {
         extensions.configure(PublishingExtension::class) {
