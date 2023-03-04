@@ -1,11 +1,17 @@
 package me.danwi.kato.common;
 
+import me.danwi.kato.common.exception.ExceptionExtraDataHolder;
+import me.danwi.kato.common.exception.ExceptionIdentify;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * kato调用异常结果表达
@@ -21,12 +27,52 @@ public class ExceptionResult {
     private String path;
     private Map<String, Object> data;
 
-    public static ExceptionResult fromThrowable(Throwable throwable) {
+    public static ExceptionResult fromException(Throwable throwable) {
         final ExceptionResult result = new ExceptionResult();
         result.setException(throwable.getClass().getName());
         result.setMessage(throwable.getMessage());
         result.setTrace(getThrowableStackTrace(throwable));
         return result;
+    }
+
+    public Exception toException(Class<?> rootClass, String methodKey) {
+        try {
+            //加载异常类
+            Class<?> exceptionClass = Class.forName(this.getException());
+            //判断其是否能被定位
+            if (exceptionClass.getAnnotation(ExceptionIdentify.class) != null) {
+                //实例化异常
+                Exception exceptionInstance = null;
+                //以message构造
+                try {
+                    exceptionInstance = (Exception) exceptionClass.getConstructor(String.class).newInstance(this.getMessage());
+                } catch (Exception ignored) {
+                }
+                //以无参构造
+                if (exceptionInstance == null)
+                    try {
+                        exceptionInstance = (Exception) exceptionClass.getConstructor().newInstance();
+                    } catch (Exception ignored) {
+                    }
+                //构造异常实例失败
+                if (exceptionInstance == null)
+                    return null;
+                //如果附带的异常数据
+                if (exceptionInstance instanceof ExceptionExtraDataHolder) {
+                    //加载附带的数据
+                    ((ExceptionExtraDataHolder) exceptionInstance).loadFromMap(this.getData());
+                }
+                // 补充堆栈
+                final List<StackTraceElement> stackTraceElements = Arrays.stream(exceptionInstance.getStackTrace()).collect(Collectors.toList());
+                stackTraceElements.add(0, new StackTraceElement(rootClass.getName(), methodKey, rootClass.getSimpleName(), 0));
+                exceptionInstance.setStackTrace(stackTraceElements.toArray(new StackTraceElement[0]));
+                //返回异常
+                return exceptionInstance;
+            }
+        } catch (Exception ignored) {
+            //构造异常的过程中发生异常,返回null
+        }
+        return null;
     }
 
     private static String getThrowableStackTrace(Throwable throwable) {
