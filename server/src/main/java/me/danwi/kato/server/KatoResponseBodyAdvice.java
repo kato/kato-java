@@ -106,9 +106,11 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
                 // 必须是参数校验抛出异常才转换为KatoBadRequestException
                 final ConstraintViolation<?> constraintViolation = constraintViolationOptional.get();
                 final Object[] executableParam = constraintViolation.getExecutableParameters();
-                if (Arrays.stream(handlerMethod.getMethodParameters())
-                        // 所有添加@Valid注解的参数 并且是executableReturnValue类型
-                        .anyMatch(it -> it.hasParameterAnnotation(Valid.class) && Arrays.stream(executableParam).anyMatch(param -> it.getParameterType().isInstance(param)))) {
+                if ( // 所有添加@Valid注解的参数 并且是getExecutableParameters类型
+                        executableParam != null
+                                && Arrays.stream(handlerMethod.getMethodParameters()).anyMatch(it -> it.hasParameterAnnotation(Valid.class)
+                                && Arrays.stream(executableParam).anyMatch(param -> it.getParameterType().isInstance(param)))
+                ) {
                     LOGGER.debug("捕获Controller 层抛出 ConstraintViolationException，转换为 BadRequestException", exception);
                     return new KatoBadRequestException(exception.getMessage(), exception);
                 }
