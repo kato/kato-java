@@ -102,6 +102,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
                 }
             }
         } catch (Exception e) {
+            // TODO   迁移到 BeanPropertyBindingResult or DirectFieldBindingResult
             throw new KatoBadRequestException(e.getMessage(), e);
         }
 
@@ -152,7 +153,7 @@ public class MultiRequestBodyMethodArgumentHandlerResolver implements HandlerMet
         }
         // 校验是否获取到 key
         if (ObjectUtils.isEmpty(paramInfo.key)) {
-            throw new IllegalStateException("JVM 版本不支持自动获取参数名，请手动使用 MultiRequestBody 注解指定value作为key");
+            throw new KatoBadRequestException("JVM 版本不支持自动获取参数名，请手动使用 MultiRequestBody 注解指定value作为key");
         }
         return paramInfo;
     }
