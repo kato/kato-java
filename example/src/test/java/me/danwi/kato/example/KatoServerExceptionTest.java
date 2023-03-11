@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.danwi.kato.common.ExceptionResult;
 import me.danwi.kato.common.exception.KatoAccessDeniedException;
 import me.danwi.kato.common.exception.KatoAuthenticationException;
+import me.danwi.kato.common.exception.KatoBusinessCodeException;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,6 +82,18 @@ public class KatoServerExceptionTest {
                 .andExpect(MockMvcResultMatchers.content().string(StringContains.containsStringIgnoringCase(exceptionName)));
         final ExceptionResult exceptionResult = objectMapper.readValue(perform.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), ExceptionResult.class);
         Assertions.assertTrue(exceptionResult.getException().contains(exceptionName));
+    }
+
+    @Test
+    public void katoBusinessCodeException() throws Exception {
+        final String exceptionName = KatoBusinessCodeException.class.getName();
+
+        final ResultActions perform = mvc.perform(MockMvcRequestBuilders.post("/katoBusinessCodeException").contentType(MediaType.APPLICATION_JSON_VALUE));
+        perform.andExpect(MockMvcResultMatchers.status().is5xxServerError())
+                .andExpect(MockMvcResultMatchers.content().string(StringContains.containsStringIgnoringCase(exceptionName)));
+        final ExceptionResult exceptionResult = objectMapper.readValue(perform.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), ExceptionResult.class);
+        Assertions.assertTrue(exceptionResult.getException().contains(exceptionName));
+        Assertions.assertNotNull(exceptionResult.getData().get(KatoBusinessCodeException.CODE_KEY));
     }
 
 }

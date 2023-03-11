@@ -25,4 +25,7 @@ interface ExceptionRpcClient {
 
     @RequestMapping("/springAccessDenied")
     fun springAccessDenied()
+
+    @RequestMapping("/katoBusinessCodeException")
+    fun katoBusinessCodeException()
 }

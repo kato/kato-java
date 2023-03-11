@@ -3,6 +3,7 @@ package me.danwi.kato.example.exception
 import me.danwi.kato.common.exception.KatoAccessDeniedException
 import me.danwi.kato.common.exception.KatoAuthenticationException
 import me.danwi.kato.common.exception.KatoBadRequestException
+import me.danwi.kato.common.exception.KatoBusinessCodeException
 import org.springframework.security.access.AuthorizationServiceException
 import org.springframework.security.authentication.AccountExpiredException
 import org.springframework.web.bind.annotation.RequestMapping
@@ -41,13 +42,8 @@ class KatoExceptionController {
         throw KatoBadRequestException("badRequest")
     }
 
-    @RequestMapping("/businessException")
-    fun businessException() {
-        throw KatoBadRequestException("businessException")
-    }
-
-    @RequestMapping("/undeclaredException")
-    fun undeclaredException() {
-        throw KatoBadRequestException("undeclaredException")
+    @RequestMapping("/katoBusinessCodeException")
+    fun katoBusinessCodeException() {
+        throw KatoBusinessCodeException(100, "katoBusinessCodeException")
     }
 }
