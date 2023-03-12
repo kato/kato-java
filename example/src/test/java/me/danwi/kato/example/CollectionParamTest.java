@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
@@ -28,7 +31,10 @@ public class CollectionParamTest {
         for (int i = 0; i < 10; i++) {
             list.add(new TestEntityAll(i, null, "a" + i, "b" + i));
         }
-        final ResponseEntity<String> result = restTemplate.postForEntity("/collection/listParam", objectMapper.writeValueAsString(list), String.class);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        final ResponseEntity<String> result = restTemplate.postForEntity("/collection/listParam", new HttpEntity(list, headers), String.class);
         assertThat(objectMapper.readValue(result.getBody(), String.class)).isEqualTo(list.stream().map(l -> "" + l.getId()).collect(Collectors.joining("")));
     }
 

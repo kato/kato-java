@@ -12,7 +12,6 @@ import org.springframework.http.*;
 
 import java.sql.Date;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -55,12 +54,9 @@ public class ValidationTest {
 
     @Test
     void validSingleParam() {
-        final HashMap<String, String> param = new HashMap<>();
-        param.put("name", "1");
-        param.put("age", "-1");
-        final RequestEntity<Map<String, String>> body = RequestEntity.method(HttpMethod.POST, "/validation/validSingleParam")
+        final RequestEntity<String> body = RequestEntity.method(HttpMethod.POST, "/validation/validSingleParam?age=-1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(param);
+                .body("1");
         final ResponseEntity<Map> response = restTemplate.exchange(body, Map.class);
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Assertions.assertEquals(KatoBadRequestException.class.getName(), response.getBody().get("exception"));

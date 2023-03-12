@@ -1,9 +1,10 @@
 package me.danwi.kato.example.argument
 
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Positive
+import jakarta.validation.constraints.Size
 import me.danwi.kato.server.PassByKato
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 /**
  * @author wjy
@@ -18,38 +19,29 @@ class MultiRequestBodyWithOutAnnoController {
         return TestEntity(id, name)
     }
 
-    @PostMapping("/multiRequestPassByParam")
-    fun multiRequestPassByParam(id: Int?, @PassByKato name: String?): TestEntity {
-        return TestEntity(id, name)
-    }
-
-    @PostMapping("/multiRequest")
-    fun multiRequest(id: Int, name: String): TestEntity {
+    @PostMapping("/multiRequest/{id}/{name}")
+    fun multiRequest(@PathVariable @Valid @Positive id: Int, @PathVariable @Valid @Size(min = 2, max = 3) name: String): TestEntity {
         return TestEntity(id, name)
     }
 
     @PostMapping("/multiRequest2")
-    fun multiRequest2(id: Int, name: String): TestEntity {
-        return TestEntity(id, name)
+    fun multiRequest2(@RequestBody id: Int): TestEntity {
+        return TestEntity(id, id.toString())
     }
 
     @PostMapping("/multiRequestSingle")
-    fun multiRequestSingle(id: Int): TestEntity {
+    fun multiRequestSingle(@RequestBody id: Int): TestEntity {
         return TestEntity(id, null)
     }
 
     @PostMapping("/multiRequestObj")
-    fun multiRequestObj(obj: TestEntity): TestEntity {
+    fun multiRequestObj(@RequestBody obj: TestEntity): TestEntity {
         return obj
     }
 
-    @PostMapping("/multiRequestObj2")
-    fun multiRequestObj2(
-        obj: TestEntity,
-        id: Int,
-        obj2: TestEntity2
-    ): TestEntity3 {
-        return TestEntity3(id, obj)
+    @RequestMapping("/multiRequestObj2")
+    fun multiRequestObj2(obj: TestEntity): TestEntity3 {
+        return TestEntity3(obj.id, obj)
     }
 
     @PostMapping("/multiRequestObj3")

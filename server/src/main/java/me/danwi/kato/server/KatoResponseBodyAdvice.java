@@ -2,6 +2,7 @@ package me.danwi.kato.server;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
@@ -78,6 +79,15 @@ public class KatoResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
         //正常情况不做处理
         return body;
+    }
+
+    /**
+     * 参数校验异常统一转换：@RequestBody 处理后
+     */
+    @ExceptionHandler(ServletException.class)
+    KatoException katoExceptionHandler(ServletException exception, HandlerMethod handlerMethod) {
+        LOGGER.debug("捕获 ServletException，转换为 BadRequestException", exception);
+        return new KatoBadRequestException(exception.getMessage(), exception);
     }
 
     /**

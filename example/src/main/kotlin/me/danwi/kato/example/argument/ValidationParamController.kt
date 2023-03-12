@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.sql.Date
 
@@ -38,8 +39,8 @@ class ValidationParamController {
     @PostMapping("/validSingleParam")
     @Valid
     fun validSingleParam(
-        @Valid @Size(min = 2, max = 3) name: String,
-        @Valid @Positive age: Int
+       @RequestBody @Valid @Size(min = 2, max = 3) name: String,
+       @RequestParam @Valid @Positive age: Int
     ): String {
         return name
     }

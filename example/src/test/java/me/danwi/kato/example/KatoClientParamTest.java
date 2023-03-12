@@ -34,18 +34,10 @@ public class KatoClientParamTest {
     }
 
     @Test
-    public void multiRequestWhitAnno() {
-        final TestEntity entity = new TestEntity(1, "name");
-        Assertions.assertThrowsExactly(ConstraintViolationException.class, () -> paramRpcClient.multiRequestWhitAnno(entity.getId(), entity.getName()));
-        final TestEntity entity2 = entity.copy(2, "ss");
-        Assertions.assertEquals(entity2, paramRpcClient.multiRequestWhitAnno(entity2.getId(), entity2.getName()));
-    }
-
-    @Test
     public void test2() {
-        final TestEntity entity = new TestEntity(1, "name");
-        final TestEntity entity2 = noUseKatoClient.multiRequest(entity.getId());
-        Assertions.assertEquals(new TestEntity(entity.getId(), entity.getId().toString()), entity2);
+        int id = 1;
+        final TestEntity entity2 = noUseKatoClient.multiRequest(id);
+        Assertions.assertEquals(new TestEntity(id, Integer.toString(id)), entity2);
     }
 
     @Test

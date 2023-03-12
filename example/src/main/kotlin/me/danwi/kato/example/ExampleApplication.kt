@@ -7,10 +7,10 @@ import me.danwi.kato.common.exception.KatoException
 import me.danwi.kato.server.EnableKatoServer
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 @SpringBootApplication
 @ImportKatoClients
@@ -31,7 +31,7 @@ class TestController {
     }
 
     @RequestMapping("/param")
-    fun index(@RequestParam name: String, age: Int): Map<String, Any> {
+    fun index(@RequestParam name: String, @RequestBody age: Int): Map<String, Any> {
         return mapOf("name" to name, "age" to age);
     }
 
